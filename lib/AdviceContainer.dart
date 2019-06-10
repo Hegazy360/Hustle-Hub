@@ -7,14 +7,12 @@ class AdviceContainer extends StatefulWidget {
     Key key,
     @required this.loading,
     @required this.advice,
-    @required this.colors,
-    @required this.index,
+    @required this.color,
   }) : super(key: key);
 
   final bool loading;
   final String advice;
-  final List colors;
-  final int index;
+  final Color color;
 
   @override
   _AdviceContainerState createState() => _AdviceContainerState();
@@ -66,14 +64,13 @@ class _AdviceContainerState extends State<AdviceContainer> {
                         Flushbar(
                           flushbarPosition: FlushbarPosition.TOP,
                           title: "Awesome!",
-                          message:
-                              "Copied to Clipboard",
+                          message: "Copied to Clipboard",
                           duration: Duration(seconds: 3),
                         )..show(context);
                       });
                     },
-                    child: Icon(Icons.content_copy,
-                        color: widget.colors[widget.index], size: 30),
+                    child:
+                        Icon(Icons.content_copy, color: widget.color, size: 30),
                   ),
           )
         ],

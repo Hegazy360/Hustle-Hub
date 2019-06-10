@@ -1,13 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:firebase_admob/firebase_admob.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class YoutubePlayerContainer extends StatefulWidget {
-  final youtubeList;
   final color;
 
-  const YoutubePlayerContainer({Key key, this.youtubeList, this.color})
-      : super(key: key);
+  const YoutubePlayerContainer({Key key, this.color}) : super(key: key);
 
   @override
   _YoutubePlayerContainerState createState() => _YoutubePlayerContainerState();
@@ -17,7 +18,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
     with AutomaticKeepAliveClientMixin {
   YoutubePlayerController _controller = YoutubePlayerController();
   ScrollController _scrollController;
-
+  List youtubeList = [];
   bool autoPlay = false;
   bool firstVideo = true;
   bool lastVideo = false;
@@ -38,7 +39,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
         setState(() {
           var newIndex = index + 1;
           if (firstVideo) firstVideo = false;
-          if (newIndex == widget.youtubeList.length - 1) lastVideo = true;
+          if (newIndex == youtubeList.length - 1) lastVideo = true;
           index++;
         });
     }
@@ -53,6 +54,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
   @override
   void initState() {
     super.initState();
+    fetchYoutubeList();
     _scrollController = new ScrollController();
   }
 
@@ -65,18 +67,20 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Container(
-          child: YoutubePlayer(
-            autoPlay: autoPlay,
-            context: context,
-            videoId: widget.youtubeList[index]['videoId'],
-            thumbnailUrl: widget.youtubeList[index]['thumbnail_hd'],
-            onPlayerInitialized: (controller) {
-              _controller = controller;
-              _controller.addListener(listener);
-            },
-          ),
-        ),
+        youtubeList.length > 0
+            ? Container(
+                child: YoutubePlayer(
+                  autoPlay: autoPlay,
+                  context: context,
+                  videoId: youtubeList[index]['videoId'],
+                  thumbnailUrl: youtubeList[index]['thumbnail_hd'],
+                  onPlayerInitialized: (controller) {
+                    _controller = controller;
+                    _controller.addListener(listener);
+                  },
+                ),
+              )
+            : CircularProgressIndicator(),
         Container(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -129,7 +133,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                           var newIndex = index + 1;
                           if (!autoPlay) autoPlay = true;
                           if (firstVideo) firstVideo = false;
-                          if (newIndex == widget.youtubeList.length - 1)
+                          if (newIndex == youtubeList.length - 1)
                             lastVideo = true;
                           index++;
                         });
@@ -143,7 +147,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
             padding: EdgeInsets.only(bottom: 100),
             physics: BouncingScrollPhysics(),
             controller: _scrollController,
-            itemCount: widget.youtubeList.length,
+            itemCount: youtubeList.length,
             itemBuilder: (context, position) {
               return GestureDetector(
                   onTap: (() {
@@ -156,7 +160,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                     setState(() {
                       index = position;
                       firstVideo = position == 0;
-                      lastVideo = position == widget.youtubeList.length - 1;
+                      lastVideo = position == youtubeList.length - 1;
                     });
                   }),
                   child: Card(
@@ -164,13 +168,13 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                     child: Row(
                       children: <Widget>[
                         Image.network(
-                          widget.youtubeList[position]['thumbnail'],
+                          youtubeList[position]['thumbnail'],
                         ),
                         Flexible(
                             child: Padding(
                           padding: EdgeInsets.all(10),
                           child: Text(
-                            widget.youtubeList[position]['title'],
+                            youtubeList[position]['title'],
                             style: TextStyle(
                                 color: position == index
                                     ? Colors.white
@@ -185,6 +189,46 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
         )
       ],
     );
+  }
+
+  fetchYoutubeList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var youtubeListString = prefs.getString('youtubeListString');
+
+    if (youtubeListString != null) {
+      Map youtubeListResponse = json.decode(youtubeListString);
+      setState(() {
+        youtubeList = getVideoIdsList(youtubeListResponse);
+      });
+    } else {
+      var response = await http.get(
+          "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&type=video&q=motivation+video&fields=items(id/videoId,snippet(title,liveBroadcastContent,thumbnails))&key=AIzaSyAoUNaKj8v5naEie7Caw0ujDkxvY6VXvz0");
+      if (response.statusCode == 200) {
+        Map youtubeListResponse = json.decode(response.body);
+        setState(() {
+          youtubeList = getVideoIdsList(youtubeListResponse);
+        });
+        await prefs.setString('youtubeListString', response.body);
+      } else {
+        print('Something went wrong. \nResponse Code : ${response.statusCode}');
+      }
+    }
+  }
+
+  List getVideoIdsList(Map youtubeListResponse) {
+    List videoIdsList = [];
+
+    for (var youtubeVideo in youtubeListResponse['items']) {
+      if (youtubeVideo['snippet']['liveBroadcastContent'] == 'none')
+        videoIdsList.add({
+          'videoId': youtubeVideo['id']['videoId'],
+          'title': youtubeVideo['snippet']['title'],
+          'thumbnail': youtubeVideo['snippet']['thumbnails']['default']['url'],
+          'thumbnail_hd': youtubeVideo['snippet']['thumbnails']['high']['url'],
+        });
+    }
+
+    return videoIdsList;
   }
 }
 
