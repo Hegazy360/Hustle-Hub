@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:daily_ad1/AdviceCard.dart';
+import 'package:daily_ad1/AmbientPlayer.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:daily_ad1/YoutubePlayerContainer.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -67,7 +68,7 @@ class _MyAppState extends State<MyApp> {
       home: Center(
         child: Container(
           child: DefaultTabController(
-              length: 2,
+              length: 3,
               child: Scaffold(
                 appBar: AppBar(
                   backgroundColor: colors[index],
@@ -78,8 +79,12 @@ class _MyAppState extends State<MyApp> {
                         text: "Advice",
                       ),
                       Tab(
+                        icon: Icon(Icons.library_music),
+                        text: "Ambient",
+                      ),
+                      Tab(
                         icon: Icon(Icons.play_circle_outline),
-                        text: "Motivational Videos",
+                        text: "Videos",
                       ),
                     ],
                   ),
@@ -89,7 +94,9 @@ class _MyAppState extends State<MyApp> {
                 ),
                 body: TabBarView(
                   children: [
-                    new AdviceCard(color: colors[index]),
+                    new AdviceCard(
+                        color: colors[index], generateColor: generateColor),
+                    new AmbientPlayer(color: colors[index]),
                     new YoutubePlayerContainer(color: colors[index]),
                   ],
                 ),
@@ -117,6 +124,12 @@ class _MyAppState extends State<MyApp> {
             ],
           ),
     );
+  }
+
+  generateColor() {
+    setState(() {
+      index = random.nextInt(colors.length);
+    });
   }
 
   Future<void> _showNotification() async {

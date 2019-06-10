@@ -6,8 +6,9 @@ import 'package:daily_ad1/AdviceContainer.dart';
 
 class AdviceCard extends StatefulWidget {
   final color;
+  final generateColor;
 
-  const AdviceCard({Key key, this.color}) : super(key: key);
+  const AdviceCard({Key key, this.color, this.generateColor}) : super(key: key);
 
   @override
   _AdviceCardState createState() => _AdviceCardState();
@@ -32,8 +33,7 @@ class _AdviceCardState extends State<AdviceCard>
       var responseJSON = json.decode(responseBody);
 
       setState(() {
-        //TODO CHANGE INDEX IN MAIN.DART
-        // if (!firstAdvice) index = random.nextInt(7);
+        if (!firstAdvice) widget.generateColor();
         advice = responseJSON['slip']['advice'];
       });
     } else {
