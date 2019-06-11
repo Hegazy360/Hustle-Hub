@@ -24,18 +24,22 @@ class _AdviceCardState extends State<AdviceCard>
 
   fetchAdvice() async {
     var response = await http.get("https://api.adviceslip.com/advice");
-    setState(() {
-      _controller.forward(from: 0.0);
-      loading = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        _controller.forward(from: 0.0);
+        loading = true;
+      });
+    }
+
     if (response.statusCode == 200) {
       String responseBody = response.body;
       var responseJSON = json.decode(responseBody);
-
-      setState(() {
-        if (!firstAdvice) widget.generateColor();
-        advice = responseJSON['slip']['advice'];
-      });
+      if (this.mounted) {
+        setState(() {
+          if (!firstAdvice) widget.generateColor();
+          advice = responseJSON['slip']['advice'];
+        });
+      }
     } else {
       print('Something went wrong. \nResponse Code : ${response.statusCode}');
     }

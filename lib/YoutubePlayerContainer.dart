@@ -197,17 +197,21 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
 
     if (youtubeListString != null) {
       Map youtubeListResponse = json.decode(youtubeListString);
-      setState(() {
-        youtubeList = getVideoIdsList(youtubeListResponse);
-      });
+      if (this.mounted) {
+        setState(() {
+          youtubeList = getVideoIdsList(youtubeListResponse);
+        });
+      }
     } else {
       var response = await http.get(
           "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&type=video&q=motivation+video&fields=items(id/videoId,snippet(title,liveBroadcastContent,thumbnails))&key=AIzaSyAoUNaKj8v5naEie7Caw0ujDkxvY6VXvz0");
       if (response.statusCode == 200) {
         Map youtubeListResponse = json.decode(response.body);
-        setState(() {
-          youtubeList = getVideoIdsList(youtubeListResponse);
-        });
+        if (this.mounted) {
+          setState(() {
+            youtubeList = getVideoIdsList(youtubeListResponse);
+          });
+        }
         await prefs.setString('youtubeListString', response.body);
       } else {
         print('Something went wrong. \nResponse Code : ${response.statusCode}');
