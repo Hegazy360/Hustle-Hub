@@ -204,7 +204,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
       }
     } else {
       var response = await http.get(
-          "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&type=video&q=motivation+video&fields=items(id/videoId,snippet(title,liveBroadcastContent,thumbnails))&key=AIzaSyAoUNaKj8v5naEie7Caw0ujDkxvY6VXvz0");
+          "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&type=video&q=motivational+speech&fields=items(id/videoId,snippet(title,liveBroadcastContent,thumbnails))&key=AIzaSyAoUNaKj8v5naEie7Caw0ujDkxvY6VXvz0");
       if (response.statusCode == 200) {
         Map youtubeListResponse = json.decode(response.body);
         if (this.mounted) {

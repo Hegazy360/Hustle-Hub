@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:audio/audio.dart';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+
+enum PlayerState { stopped, playing, paused }
 
 class AmbientMusicCard extends StatefulWidget {
   final title;
@@ -17,158 +19,200 @@ class AmbientMusicCard extends StatefulWidget {
 }
 
 class _AmbientMusicCardState extends State<AmbientMusicCard> {
-  String filePath;
-  Audio audioPlayer = new Audio(single: true);
-  AudioPlayerState state = AudioPlayerState.STOPPED;
-  double position = 0;
-  int buffering = 0;
-  StreamSubscription<AudioPlayerState> _playerStateSubscription;
-  StreamSubscription<double> _playerPositionController;
-  StreamSubscription<int> _playerBufferingSubscription;
-  StreamSubscription<AudioPlayerError> _playerErrorSubscription;
+  bool isLocal;
+  PlayerMode mode;
+
+  AudioPlayer _audioPlayer;
+  AudioPlayerState _audioPlayerState;
+  Duration _duration;
+  Duration _position;
+
+  PlayerState _playerState = PlayerState.stopped;
+  StreamSubscription _durationSubscription;
+  StreamSubscription _positionSubscription;
+  StreamSubscription _playerCompleteSubscription;
+  StreamSubscription _playerErrorSubscription;
+  StreamSubscription _playerStateSubscription;
+
+  get _isPlaying => _playerState == PlayerState.playing;
+  get _isPaused => _playerState == PlayerState.paused;
+  get _durationText => _duration?.toString()?.split('.')?.first ?? '';
+  get _positionText => _position?.toString()?.split('.')?.first ?? '';
 
   @override
   void initState() {
-    downloadFile(widget.fileName);
-    _playerStateSubscription =
-        audioPlayer.onPlayerStateChanged.listen((AudioPlayerState state) {
-      print("onPlayerStateChanged: ${audioPlayer.uid} $state");
-
-      if (mounted) setState(() => this.state = state);
-    });
-
-    _playerPositionController =
-        audioPlayer.onPlayerPositionChanged.listen((double position) {
-      print(
-          "onPlayerPositionChanged: ${audioPlayer.uid} $position ${audioPlayer.duration}");
-
-      if (mounted) setState(() => this.position = position);
-    });
-
-    _playerBufferingSubscription =
-        audioPlayer.onPlayerBufferingChanged.listen((int percent) {
-      print("onPlayerBufferingChanged: ${audioPlayer.uid} $percent");
-
-      if (mounted && buffering != percent) setState(() => buffering = percent);
-    });
-
-    _playerErrorSubscription =
-        audioPlayer.onPlayerError.listen((AudioPlayerError error) {
-      throw ("onPlayerError: ${error.code} ${error.message}");
-    });
-
-    audioPlayer.preload(filePath);
     super.initState();
+    _initAudioPlayer();
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget status = Container();
-
-    print(
-        "[build] uid=${audioPlayer.uid} duration=${audioPlayer.duration} state=$state");
-
-    switch (state) {
-      case AudioPlayerState.LOADING:
-        {
-          status = Container(
-              padding: const EdgeInsets.all(12.0),
-              child: Container(
-                width: 24.0,
-                height: 24.0,
-                child: Center(
-                    child: Stack(
-                  alignment: AlignmentDirectional.center,
-                  children: <Widget>[
-                    CircularProgressIndicator(strokeWidth: 2.0),
-                    Text("${buffering}%",
-                        style: TextStyle(fontSize: 8.0),
-                        textAlign: TextAlign.center)
-                  ],
-                )),
-              ));
-          break;
-        }
-
-      case AudioPlayerState.PLAYING:
-        {
-          status = IconButton(
-              icon: Icon(Icons.pause, size: 28.0), onPressed: onPause);
-          break;
-        }
-
-      case AudioPlayerState.READY:
-      case AudioPlayerState.PAUSED:
-      case AudioPlayerState.STOPPED:
-        {
-          status = IconButton(
-              icon: Icon(Icons.play_arrow, size: 28.0), onPressed: onPlay);
-
-          if (state == AudioPlayerState.STOPPED) audioPlayer.seek(0.0);
-
-          break;
-        }
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
-      child: Column(
-        children: <Widget>[
-          Text(audioPlayer.uid),
-          Row(
-            children: <Widget>[
-              status,
-              Slider(
-                max: audioPlayer.duration.toDouble(),
-                value: position.toDouble(),
-                onChanged: onSeek,
-              ),
-              Text("${audioPlayer.duration.toDouble()}ms")
-            ],
-          )
-        ],
-      ),
-    );
+    return Card(
+        color: Colors.black38,
+        child: Padding(
+            padding: EdgeInsets.all(15),
+            child: Column(
+              children: <Widget>[
+                Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.indigo[50], fontSize: 20, fontWeight: FontWeight.w300),
+                ),
+                IconButton(
+                    onPressed: () =>
+                        _isPlaying ? _pause() : _play(widget.fileName),
+                    iconSize: 100.0,
+                    icon:
+                        _isPlaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                    color: Colors.indigo[100]),
+              ],
+            )));
+    // return Row(
+    //   mainAxisSize: MainAxisSize.min,
+    //   children: <Widget>[
+    //     Column(
+    //       children: [
+    //         IconButton(
+    //             onPressed: _isPlaying ? null : () => _play(widget.fileName),
+    //             iconSize: 64.0,
+    //             icon: Icon(Icons.play_arrow),
+    //             color: Colors.cyan),
+    //         IconButton(
+    //             onPressed: _isPlaying ? () => _pause() : null,
+    //             iconSize: 64.0,
+    //             icon: Icon(Icons.pause),
+    //             color: Colors.cyan),
+    //         IconButton(
+    //             onPressed: _isPlaying || _isPaused ? () => _stop() : null,
+    //             iconSize: 64.0,
+    //             icon: Icon(Icons.stop),
+    //             color: Colors.cyan),
+    //       ],
+    //     ),
+    //     Column(
+    //       children: [
+    //         Padding(
+    //           padding: EdgeInsets.all(12.0),
+    //           child: Stack(
+    //             children: [
+    //               CircularProgressIndicator(
+    //                 value: 1.0,
+    //                 valueColor: AlwaysStoppedAnimation(Colors.grey[300]),
+    //               ),
+    //               CircularProgressIndicator(
+    //                 value: (_position != null &&
+    //                         _duration != null &&
+    //                         _position.inMilliseconds > 0 &&
+    //                         _position.inMilliseconds < _duration.inMilliseconds)
+    //                     ? _position.inMilliseconds / _duration.inMilliseconds
+    //                     : 0.0,
+    //                 valueColor: AlwaysStoppedAnimation(Colors.cyan),
+    //               ),
+    //             ],
+    //           ),
+    //         ),
+    //         Text(
+    //           _position != null
+    //               ? '${_positionText ?? ''} / ${_durationText ?? ''}'
+    //               : _duration != null ? _durationText : '',
+    //           style: TextStyle(fontSize: 24.0),
+    //         ),
+    //       ],
+    //     ),
+    //     Text("State: $_audioPlayerState")
+    //   ],
+    // );
   }
 
-  @override
-  void dispose() {
-    _playerStateSubscription.cancel();
-    _playerPositionController.cancel();
-    _playerBufferingSubscription.cancel();
-    _playerErrorSubscription.cancel();
-    audioPlayer.release();
-    super.dispose();
+  void _initAudioPlayer() {
+    _audioPlayer = AudioPlayer(mode: mode);
+
+    _durationSubscription =
+        _audioPlayer.onDurationChanged.listen((duration) => setState(() {
+              _duration = duration;
+            }));
+
+    _positionSubscription =
+        _audioPlayer.onAudioPositionChanged.listen((p) => setState(() {
+              _position = p;
+            }));
+
+    _playerCompleteSubscription =
+        _audioPlayer.onPlayerCompletion.listen((event) {
+      _onComplete();
+      setState(() {
+        _position = _duration;
+      });
+    });
+
+    _playerErrorSubscription = _audioPlayer.onPlayerError.listen((msg) {
+      print('audioPlayer error : $msg');
+      setState(() {
+        _playerState = PlayerState.stopped;
+        _duration = Duration(seconds: 0);
+        _position = Duration(seconds: 0);
+      });
+    });
+
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _audioPlayerState = state;
+      });
+    });
   }
 
-  onPlay() {
-    audioPlayer.play("https://firebasestorage.googleapis.com/v0/b/daily-ad1.appspot.com/o/SampleAudio_0.4mb.mp3?alt=media&token=ba0eefbc-83d8-4064-b9d1-5c9c52e5da34");
-  }
+  Future<int> _play(fileName) async {
+    final playPosition = (_position != null &&
+            _duration != null &&
+            _position.inMilliseconds > 0 &&
+            _position.inMilliseconds < _duration.inMilliseconds)
+        ? _position
+        : null;
 
-  onPause() {
-    audioPlayer.pause();
-  }
-
-  onSeek(double value) {
-    // Note: We can only seek if the audio is ready
-    audioPlayer.seek(value);
-  }
-
-  Future<Null> downloadFile(String httpPath) async {
-    final RegExp regExp = RegExp('([^?/]*\.(mp3))');
-    final String fileName = regExp.stringMatch(httpPath);
     final Directory tempDir = Directory.systemTemp;
     final String path = '${tempDir.path}/$fileName';
     final File file = File(path);
-    final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
-    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-    final int byteNumber = (await downloadTask.future).totalByteCount;
+    if (file.existsSync()) {
+      final result =
+          await _audioPlayer.play(path, isLocal: true, position: playPosition);
+      if (result == 1) setState(() => _playerState = PlayerState.playing);
+      return result;
+    } else {
+      final StorageReference ref =
+          FirebaseStorage.instance.ref().child(fileName);
+      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+      await downloadTask.future.then((test) async {
+        final result = await _audioPlayer.play(path,
+            isLocal: true, position: playPosition);
+        if (result == 1) setState(() => _playerState = PlayerState.playing);
+        return result;
+      });
+    }
 
-    print('HERE BRO WE GUCCI');
-
-    print(byteNumber);
-    print(path);
-
-    if (mounted) setState(() => filePath = path);
+    return 0;
   }
+
+  Future<int> _pause() async {
+    final result = await _audioPlayer.pause();
+    if (result == 1) setState(() => _playerState = PlayerState.paused);
+    return result;
+  }
+
+  Future<int> _stop() async {
+    final result = await _audioPlayer.stop();
+    if (result == 1) {
+      setState(() {
+        _playerState = PlayerState.stopped;
+        _position = Duration();
+      });
+    }
+    return result;
+  }
+
+  void _onComplete() {
+    setState(() => _playerState = PlayerState.stopped);
+  }
+
+  Future<String> downloadFile(fileName) async {}
 }

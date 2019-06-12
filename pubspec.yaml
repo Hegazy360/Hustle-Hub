@@ -20,7 +20,7 @@ dependencies:
   flutter:
     sdk: flutter
   wave: ^0.0.8
-  audio: ^0.0.5
+  audioplayers: ^0.12.1
   http: ^0.12.0+2
   flushbar: '1.5.3'
   firebase_admob: ^0.9.0+1

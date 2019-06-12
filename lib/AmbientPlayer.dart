@@ -16,56 +16,63 @@ class AmbientPlayer extends StatefulWidget {
 }
 
 class _AmbientPlayerState extends State<AmbientPlayer> {
-
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: <Widget>[
-        StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection('ambient').snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return new Text('Loading...');
-              default:
-                return new Container(
-                    height: 300,
-                    color: widget.color,
-                    child: ListView(
-                      children: snapshot.data.documents
-                          .map((DocumentSnapshot document) {
-                        return new Column(children: <Widget>[
-                          Text(document['title']),
-                          Text(document['description']),
-                          AmbientMusicCard(
-                              title: document['title'],
-                              description: document['description'],
-                              fileName: document['file_name'])
-                        ]);
-                      }).toList(),
-                    ));
-            }
-          },
-        ),
-        Expanded(
+        Positioned.fill(
           child: WaveWidget(
             config: CustomConfig(
+              blur: MaskFilter.blur(BlurStyle.solid, 5),
               colors: [
-                widget.color[400],
-                widget.color[300],
-                widget.color[200],
-                widget.color[100]
+                // widget.color[400],
+                // widget.color[300],
+                // widget.color[200],
+                // widget.color[100]
+                Colors.grey[900],
+                Colors.grey[800],
+                Colors.grey[700],
+                Colors.grey[600]
               ],
               durations: [35000, 19440, 10800, 6000],
-              heightPercentages: [0.40, 0.43, 0.45, 0.50],
+              heightPercentages: [0.30, 0.33, 0.35, 0.40],
+
             ),
-            backgroundColor: widget.color,
+            backgroundColor: Colors.grey[600],
             size: Size(double.infinity, double.infinity),
             waveAmplitude: 0,
           ),
-        )
+        ),
+        Positioned.fill(
+          top: 0,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: Firestore.instance.collection('ambient').snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+              switch (snapshot.connectionState) {
+                case ConnectionState.waiting:
+                  return Text('Loading...');
+                default:
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: snapshot.data.documents
+                        .map((DocumentSnapshot document) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width / 2,
+                        height: 200,
+                        child: AmbientMusicCard(
+                            title: document['title'],
+                            description: document['description'],
+                            fileName: document['file_name']),
+                      );
+                    }).toList(),
+                  );
+              }
+            },
+          ),
+        ),
       ],
     );
   }
