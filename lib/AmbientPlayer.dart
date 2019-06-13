@@ -25,20 +25,19 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
             config: CustomConfig(
               blur: MaskFilter.blur(BlurStyle.solid, 5),
               colors: [
-                // widget.color[400],
-                // widget.color[300],
-                // widget.color[200],
-                // widget.color[100]
-                Colors.grey[900],
-                Colors.grey[800],
-                Colors.grey[700],
-                Colors.grey[600]
+                widget.color[400],
+                widget.color[300],
+                widget.color[200],
+                widget.color[100]
+                // Colors.grey[900],
+                // Colors.grey[800],
+                // Colors.grey[700],
+                // Colors.grey[600]
               ],
               durations: [35000, 19440, 10800, 6000],
               heightPercentages: [0.30, 0.33, 0.35, 0.40],
-
             ),
-            backgroundColor: Colors.grey[600],
+            backgroundColor: Colors.white,
             size: Size(double.infinity, double.infinity),
             waveAmplitude: 0,
           ),

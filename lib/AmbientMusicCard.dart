@@ -48,23 +48,27 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-        color: Colors.black38,
+        color: Colors.white12,
         child: Padding(
             padding: EdgeInsets.all(15),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.indigo[50], fontSize: 20, fontWeight: FontWeight.w300),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
                 ),
                 IconButton(
                     onPressed: () =>
                         _isPlaying ? _pause() : _play(widget.fileName),
-                    iconSize: 100.0,
+                    iconSize: 80.0,
                     icon:
                         _isPlaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
-                    color: Colors.indigo[100]),
+                    color: Colors.white),
               ],
             )));
     // return Row(

@@ -29,10 +29,11 @@ class _MyAppState extends State<MyApp> {
     Colors.lightBlue,
     Colors.indigo,
     Colors.pink,
-    Colors.teal,
+    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
   ];
   Random random = new Random();
   int index = 0;
+  bool darkMode = false;
 
   @override
   void initState() {
@@ -64,7 +65,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Daily Motivation',
+      title: 'Hustle Hub',
       home: Center(
         child: Container(
           child: DefaultTabController(
@@ -72,6 +73,18 @@ class _MyAppState extends State<MyApp> {
               child: Scaffold(
                 appBar: AppBar(
                   backgroundColor: colors[index],
+                  actions: <Widget>[
+                    Switch(
+                      value: darkMode,
+                      onChanged: (value) {
+                        setState(() {
+                          darkMode = value;
+                        });
+                      },
+                      activeTrackColor: Colors.grey[900],
+                      activeColor: Colors.grey[800],
+                    ),
+                  ],
                   bottom: TabBar(
                     tabs: [
                       Tab(
@@ -90,7 +103,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   centerTitle: true,
                   elevation: 0,
-                  title: Text('Looking for guidance?'),
+                  title: Text('Hustle Hub'),
                 ),
                 body: TabBarView(
                   children: [
@@ -142,7 +155,7 @@ class _MyAppState extends State<MyApp> {
       var bigTextStyleInformation =
           BigTextStyleInformation(advice, htmlFormatBigText: true);
       var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-          'Daily Motivation', 'Daily Advice', 'Sends you a daily advice.',
+          'Hustle Hub', 'Daily Advice', 'Sends you a daily advice.',
           style: AndroidNotificationStyle.BigText,
           styleInformation: bigTextStyleInformation,
           importance: Importance.Max,
