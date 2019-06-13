@@ -48,11 +48,10 @@ class _MyAppState extends State<MyApp> {
 
     var initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettings = InitializationSettings(
-        initializationSettingsAndroid, null);
+    var initializationSettings =
+        InitializationSettings(initializationSettingsAndroid, null);
     flutterLocalNotificationsPlugin
-        .initialize(initializationSettings,
-            onSelectNotification: onSelectNotification)
+        .initialize(initializationSettings)
         .then((response) async {
       await _showNotification();
     });
@@ -108,10 +107,11 @@ class _MyAppState extends State<MyApp> {
                     new AdviceCard(
                         color: darkMode ? Colors.grey[900] : colors[index],
                         generateColor: generateColor),
-                    new AmbientPlayer(
-                        color: colors[index], darkMode: darkMode),
+                    new AmbientPlayer(color: colors[index], darkMode: darkMode),
                     new YoutubePlayerContainer(
-                        color: darkMode ? Colors.grey[900] : colors[index],darkMode: this.darkMode,),
+                      color: darkMode ? Colors.grey[900] : colors[index],
+                      darkMode: this.darkMode,
+                    ),
                   ],
                 ),
               )),
@@ -150,12 +150,6 @@ class _MyAppState extends State<MyApp> {
           advice,
           scheduledNotificationDateTime,
           platformChannelSpecifics);
-    }
-  }
-
-  Future<void> onSelectNotification(String payload) async {
-    if (payload != null) {
-      debugPrint('notification payload: ' + payload);
     }
   }
 }

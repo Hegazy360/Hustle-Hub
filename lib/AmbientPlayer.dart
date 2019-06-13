@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:async';
 import 'package:wave/config.dart';
 import 'package:wave/wave.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:daily_ad1/AmbientMusicCard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AmbientPlayer extends StatefulWidget {
@@ -15,13 +20,46 @@ class AmbientPlayer extends StatefulWidget {
   _AmbientPlayerState createState() => _AmbientPlayerState();
 }
 
-class _AmbientPlayerState extends State<AmbientPlayer>
-    with AutomaticKeepAliveClientMixin {
+class _AmbientPlayerState extends State<AmbientPlayer> {
   Stream<QuerySnapshot> ambientMusic =
       Firestore.instance.collection('ambient').snapshots();
+  AudioPlayer audioPlayer = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
+  Duration _duration;
+  Duration _position;
+  PlayerState _playerState = PlayerState.stopped;
+  String playingFileName;
+  AudioPlayerState audioPlayerState;
+  StreamSubscription _durationSubscription;
+  StreamSubscription _positionSubscription;
+  StreamSubscription _playerCompleteSubscription;
+  StreamSubscription _playerErrorSubscription;
+  StreamSubscription _playerStateSubscription;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  get _isPlaying => _playerState == PlayerState.playing;
 
   @override
-  bool get wantKeepAlive => true;
+  void initState() {
+    super.initState();
+    _initAudioPlayer();
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings =
+        InitializationSettings(initializationSettingsAndroid, null);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    audioPlayer.stop();
+    _durationSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _playerCompleteSubscription?.cancel();
+    _playerErrorSubscription?.cancel();
+    _playerStateSubscription?.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +103,20 @@ class _AmbientPlayerState extends State<AmbientPlayer>
                             width: MediaQuery.of(context).size.width / 2,
                             height: 190,
                             child: AmbientMusicCard(
-                                title: document['title'],
-                                color: widget.color,
-                                darkMode: widget.darkMode,
-                                fileName: document['file_name']),
+                              title: document['title'],
+                              color: widget.color,
+                              darkMode: widget.darkMode,
+                              audioPlayer: audioPlayer,
+                              play: _play,
+                              pause: _pause,
+                              stop: _stop,
+                              isPlaying: _isPlaying,
+                              position: _position,
+                              duration: _duration,
+                              fileName: document['file_name'],
+                              isActive:
+                                  playingFileName == document['file_name'],
+                            ),
                           );
                         }).toList(),
                       ));
@@ -79,6 +127,101 @@ class _AmbientPlayerState extends State<AmbientPlayer>
       ],
     );
   }
-}
 
-class AmbientFileCard {}
+  void _initAudioPlayer() {
+    _durationSubscription =
+        audioPlayer.onDurationChanged.listen((duration) => setState(() {
+              _duration = duration;
+            }));
+
+    _positionSubscription =
+        audioPlayer.onAudioPositionChanged.listen((p) => setState(() {
+              _position = p;
+            }));
+
+    _playerCompleteSubscription =
+        audioPlayer.onPlayerCompletion.listen((event) {
+      _onComplete();
+      setState(() {
+        _position = _duration;
+      });
+    });
+
+    _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
+      print('audioPlayer error : $msg');
+      setState(() {
+        _playerState = PlayerState.stopped;
+        _duration = Duration(seconds: 0);
+        _position = Duration(seconds: 0);
+      });
+    });
+
+    audioPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        audioPlayerState = state;
+      });
+    });
+  }
+
+  Future<int> _play(fileName) async {
+    final playPosition = (_position != null &&
+            _duration != null &&
+            _position.inMilliseconds > 0 &&
+            _position.inMilliseconds < _duration.inMilliseconds)
+        ? _position
+        : null;
+
+    final Directory tempDir = Directory.systemTemp;
+    final String path = '${tempDir.path}/$fileName';
+    final File file = File(path);
+    if (file.existsSync()) {
+      final result =
+          await audioPlayer.play(path, isLocal: true, position: playPosition);
+      if (result == 1)
+        setState(() {
+          _playerState = PlayerState.playing;
+          playingFileName = fileName;
+        });
+
+      return result;
+    } else {
+      final StorageReference ref =
+          FirebaseStorage.instance.ref().child(fileName);
+      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+      await downloadTask.future.then((test) async {
+        final result =
+            await audioPlayer.play(path, isLocal: true, position: playPosition);
+        if (result == 1)
+          setState(() {
+            _playerState = PlayerState.playing;
+            playingFileName = fileName;
+          });
+        return result;
+      });
+    }
+
+    return 0;
+  }
+
+  Future<int> _pause() async {
+    final result = await audioPlayer.pause();
+    if (result == 1) setState(() => _playerState = PlayerState.paused);
+    return result;
+  }
+
+  Future<int> _stop() async {
+    final result = await audioPlayer.stop();
+    if (result == 1) {
+      setState(() {
+        _playerState = PlayerState.stopped;
+        _position = Duration();
+      });
+    }
+    return result;
+  }
+
+  void _onComplete() {
+    setState(() => _playerState = PlayerState.stopped);
+  }
+}
