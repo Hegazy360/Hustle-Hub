@@ -20,16 +20,14 @@ class _MyAppState extends State<MyApp> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   List colors = [
+    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
     Colors.red,
     Colors.green,
     Colors.blue,
     Colors.cyan,
-    Colors.deepOrange,
     Colors.lightGreen,
     Colors.lightBlue,
-    Colors.indigo,
     Colors.pink,
-    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
   ];
   Random random = new Random();
   int index = 0;
@@ -50,10 +48,8 @@ class _MyAppState extends State<MyApp> {
 
     var initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettingsIOS = IOSInitializationSettings(
-        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
     var initializationSettings = InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
+        initializationSettingsAndroid, null);
     flutterLocalNotificationsPlugin
         .initialize(initializationSettings,
             onSelectNotification: onSelectNotification)
@@ -72,7 +68,7 @@ class _MyAppState extends State<MyApp> {
               length: 3,
               child: Scaffold(
                 appBar: AppBar(
-                  backgroundColor: colors[index],
+                  backgroundColor: darkMode ? Colors.grey[900] : colors[index],
                   actions: <Widget>[
                     Switch(
                       value: darkMode,
@@ -81,8 +77,10 @@ class _MyAppState extends State<MyApp> {
                           darkMode = value;
                         });
                       },
-                      activeTrackColor: Colors.grey[900],
-                      activeColor: Colors.grey[800],
+                      activeTrackColor: Colors.grey[700],
+                      activeColor: Colors.grey[850],
+                      inactiveThumbColor:
+                          darkMode ? Colors.grey[900] : colors[index][100],
                     ),
                   ],
                   bottom: TabBar(
@@ -97,7 +95,7 @@ class _MyAppState extends State<MyApp> {
                       ),
                       Tab(
                         icon: Icon(Icons.play_circle_outline),
-                        text: "Videos",
+                        text: "Motivational",
                       ),
                     ],
                   ),
@@ -108,34 +106,17 @@ class _MyAppState extends State<MyApp> {
                 body: TabBarView(
                   children: [
                     new AdviceCard(
-                        color: colors[index], generateColor: generateColor),
-                    new AmbientPlayer(color: colors[index]),
-                    new YoutubePlayerContainer(color: colors[index]),
+                        color: darkMode ? Colors.grey[900] : colors[index],
+                        generateColor: generateColor),
+                    new AmbientPlayer(
+                        color: colors[index], darkMode: darkMode),
+                    new YoutubePlayerContainer(
+                        color: darkMode ? Colors.grey[900] : colors[index],darkMode: this.darkMode,),
                   ],
                 ),
               )),
         ),
       ),
-    );
-  }
-
-  Future onDidReceiveLocalNotification(
-      int id, String title, String body, String payload) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => new CupertinoAlertDialog(
-            title: new Text(title),
-            content: new Text(body),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                child: new Text('Ok'),
-                onPressed: () async {
-                  Navigator.of(context, rootNavigator: true).pop();
-                },
-              )
-            ],
-          ),
     );
   }
 

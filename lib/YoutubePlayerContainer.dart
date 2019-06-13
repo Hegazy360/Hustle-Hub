@@ -7,8 +7,10 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class YoutubePlayerContainer extends StatefulWidget {
   final color;
+  final darkMode;
 
-  const YoutubePlayerContainer({Key key, this.color}) : super(key: key);
+  const YoutubePlayerContainer({Key key, this.color, this.darkMode})
+      : super(key: key);
 
   @override
   _YoutubePlayerContainerState createState() => _YoutubePlayerContainerState();
@@ -82,15 +84,21 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
               )
             : CircularProgressIndicator(),
         Container(
+          color: widget.darkMode ? Colors.grey[900] : Colors.white,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               RaisedButton.icon(
+                color: widget.darkMode ? Colors.grey[700] : Colors.white,
+                disabledColor:
+                    widget.darkMode ? Colors.grey[800] : Colors.grey,
+                textColor: widget.darkMode ? Colors.white : Colors.black,
+                disabledTextColor:
+                    widget.darkMode ? Colors.grey[700] : Colors.black,
                 icon: Container(
-                  child: Icon(Icons.navigate_before, color: widget.color),
+                  child: Icon(Icons.navigate_before),
                 ),
                 label: Text('Previous Video'),
-                color: Colors.white,
                 splashColor: widget.color,
                 onPressed: firstVideo
                     ? null
@@ -111,11 +119,16 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                       },
               ),
               RaisedButton.icon(
+                color: widget.darkMode ? Colors.grey[700] : Colors.white,
+                disabledColor:
+                    widget.darkMode ? Colors.grey[800] : Colors.grey,
+                textColor: widget.darkMode ? Colors.white : Colors.black,
+                disabledTextColor:
+                    widget.darkMode ? Colors.grey[700] : Colors.black,
                 icon: Container(
-                  child: Icon(Icons.navigate_next, color: widget.color),
+                  child: Icon(Icons.navigate_next),
                 ),
                 label: Text('Next Video'),
-                color: Colors.white,
                 splashColor: widget.color,
                 onPressed: lastVideo
                     ? null
@@ -175,6 +188,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                           padding: EdgeInsets.all(10),
                           child: Text(
                             youtubeList[position]['title'],
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: position == index
                                     ? Colors.white

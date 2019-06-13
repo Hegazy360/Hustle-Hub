@@ -3,15 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/services.dart';
 
 enum PlayerState { stopped, playing, paused }
 
 class AmbientMusicCard extends StatefulWidget {
   final title;
-  final description;
   final fileName;
+  final color;
+  final darkMode;
 
-  const AmbientMusicCard({Key key, this.title, this.description, this.fileName})
+  const AmbientMusicCard(
+      {Key key, this.title, this.fileName, this.color, this.darkMode})
       : super(key: key);
 
   @override
@@ -46,29 +49,76 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
   }
 
   @override
+  void deactivate() {
+    _audioPlayer.pause();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _audioPlayer.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
-        color: Colors.white12,
+        color: _isPlaying
+            ? widget.darkMode
+                ? Colors.grey[900].withOpacity(0.4)
+                : widget.color.withOpacity(0.4)
+            : Colors.white12,
         child: Padding(
             padding: EdgeInsets.all(15),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+            child: Stack(
               children: <Widget>[
-                Text(
-                  widget.title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500),
+                Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            widget.title,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          IconButton(
+                              onPressed: () => _isPlaying
+                                  ? _pause()
+                                  : _play(widget.fileName),
+                              iconSize: 80.0,
+                              icon: _isPlaying
+                                  ? Icon(Icons.pause)
+                                  : Icon(Icons.play_arrow),
+                              color: Colors.white),
+                        ],
+                      ),
+                      Stack(
+                        children: <Widget>[
+                          LinearProgressIndicator(
+                            value: (_position != null &&
+                                    _duration != null &&
+                                    _position.inMilliseconds > 0 &&
+                                    _position.inMilliseconds <
+                                        _duration.inMilliseconds)
+                                ? _position.inMilliseconds /
+                                    _duration.inMilliseconds
+                                : 0.0,
+                            valueColor: AlwaysStoppedAnimation(
+                                widget.darkMode ? Colors.white : widget.color),
+                            backgroundColor:
+                                widget.darkMode ? Colors.orange : Colors.white,
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
                 ),
-                IconButton(
-                    onPressed: () =>
-                        _isPlaying ? _pause() : _play(widget.fileName),
-                    iconSize: 80.0,
-                    icon:
-                        _isPlaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
-                    color: Colors.white),
               ],
             )));
     // return Row(
@@ -95,26 +145,26 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
     //     ),
     //     Column(
     //       children: [
-    //         Padding(
-    //           padding: EdgeInsets.all(12.0),
-    //           child: Stack(
-    //             children: [
-    //               CircularProgressIndicator(
-    //                 value: 1.0,
-    //                 valueColor: AlwaysStoppedAnimation(Colors.grey[300]),
-    //               ),
-    //               CircularProgressIndicator(
-    //                 value: (_position != null &&
-    //                         _duration != null &&
-    //                         _position.inMilliseconds > 0 &&
-    //                         _position.inMilliseconds < _duration.inMilliseconds)
-    //                     ? _position.inMilliseconds / _duration.inMilliseconds
-    //                     : 0.0,
-    //                 valueColor: AlwaysStoppedAnimation(Colors.cyan),
-    //               ),
-    //             ],
-    //           ),
-    //         ),
+    // Padding(
+    //   padding: EdgeInsets.all(12.0),
+    //   child: Stack(
+    //     children: [
+    //       CircularProgressIndicator(
+    //         value: 1.0,
+    //         valueColor: AlwaysStoppedAnimation(Colors.grey[300]),
+    //       ),
+    //       CircularProgressIndicator(
+    //         value: (_position != null &&
+    //                 _duration != null &&
+    //                 _position.inMilliseconds > 0 &&
+    //                 _position.inMilliseconds < _duration.inMilliseconds)
+    //             ? _position.inMilliseconds / _duration.inMilliseconds
+    //             : 0.0,
+    //         valueColor: AlwaysStoppedAnimation(Colors.cyan),
+    //       ),
+    //     ],
+    //   ),
+    // ),
     //         Text(
     //           _position != null
     //               ? '${_positionText ?? ''} / ${_durationText ?? ''}'
@@ -129,8 +179,7 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
   }
 
   void _initAudioPlayer() {
-    _audioPlayer = AudioPlayer(mode: mode);
-
+    _audioPlayer = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
     _durationSubscription =
         _audioPlayer.onDurationChanged.listen((duration) => setState(() {
               _duration = duration;
