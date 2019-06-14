@@ -16,8 +16,7 @@ class YoutubePlayerContainer extends StatefulWidget {
   _YoutubePlayerContainerState createState() => _YoutubePlayerContainerState();
 }
 
-class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
-    with AutomaticKeepAliveClientMixin {
+class _YoutubePlayerContainerState extends State<YoutubePlayerContainer> {
   YoutubePlayerController _controller = YoutubePlayerController();
   ScrollController _scrollController;
   List youtubeList = [];
@@ -25,9 +24,6 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
   bool firstVideo = true;
   bool lastVideo = false;
   var index = 0;
-
-  @override
-  bool get wantKeepAlive => true;
 
   void listener() {
     if (_controller.value.playerState == PlayerState.ENDED) {
@@ -90,8 +86,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
             children: <Widget>[
               RaisedButton.icon(
                 color: widget.darkMode ? Colors.grey[700] : Colors.white,
-                disabledColor:
-                    widget.darkMode ? Colors.grey[800] : Colors.grey,
+                disabledColor: widget.darkMode ? Colors.grey[800] : Colors.grey,
                 textColor: widget.darkMode ? Colors.white : Colors.black,
                 disabledTextColor:
                     widget.darkMode ? Colors.grey[700] : Colors.black,
@@ -120,8 +115,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
               ),
               RaisedButton.icon(
                 color: widget.darkMode ? Colors.grey[700] : Colors.white,
-                disabledColor:
-                    widget.darkMode ? Colors.grey[800] : Colors.grey,
+                disabledColor: widget.darkMode ? Colors.grey[800] : Colors.grey,
                 textColor: widget.darkMode ? Colors.white : Colors.black,
                 disabledTextColor:
                     widget.darkMode ? Colors.grey[700] : Colors.black,

@@ -15,6 +15,7 @@ class AmbientMusicCard extends StatefulWidget {
   final position;
   final duration;
   final isActive;
+  final loading;
 
   const AmbientMusicCard(
       {Key key,
@@ -29,7 +30,8 @@ class AmbientMusicCard extends StatefulWidget {
       this.isPlaying,
       this.position,
       this.duration,
-      this.isActive})
+      this.isActive,
+      this.loading})
       : super(key: key);
 
   @override
@@ -43,25 +45,13 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
   }
 
   @override
-  void deactivate() {
-    widget.audioPlayer.pause();
-    super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    widget.audioPlayer.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Card(
         color: widget.isPlaying && widget.isActive
             ? widget.darkMode
                 ? Colors.grey[900].withOpacity(0.4)
                 : widget.color.withOpacity(0.4)
-            : Colors.white12,
+            : Colors.white30,
         child: Padding(
             padding: EdgeInsets.all(15),
             child: Stack(
@@ -81,16 +71,26 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500),
                           ),
-                          IconButton(
-                              onPressed: () =>
-                                  widget.isPlaying && widget.isActive
-                                      ? widget.pause()
-                                      : widget.play(widget.fileName),
-                              iconSize: 80.0,
-                              icon: widget.isPlaying && widget.isActive
-                                  ? Icon(Icons.pause)
-                                  : Icon(Icons.play_arrow),
-                              color: Colors.white),
+                          widget.isActive && widget.loading
+                              ? Padding(
+                                  padding: EdgeInsets.all(30),
+                                  child: CircularProgressIndicator(
+                                    backgroundColor: Colors.white,
+                                    valueColor: AlwaysStoppedAnimation(
+                                        widget.darkMode
+                                            ? Colors.orange
+                                            : widget.color),
+                                  ))
+                              : IconButton(
+                                  onPressed: () =>
+                                      widget.isPlaying && widget.isActive
+                                          ? widget.pause()
+                                          : widget.play(widget.fileName),
+                                  iconSize: 80.0,
+                                  icon: widget.isPlaying && widget.isActive
+                                      ? Icon(Icons.pause)
+                                      : Icon(Icons.play_arrow),
+                                  color: Colors.white),
                         ],
                       ),
                       Stack(
@@ -105,8 +105,9 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                                 ? widget.position.inMilliseconds /
                                     widget.duration.inMilliseconds
                                 : 0.0,
-                            valueColor: AlwaysStoppedAnimation(
-                                widget.darkMode ? Colors.white : widget.color),
+                            valueColor: AlwaysStoppedAnimation(widget.darkMode
+                                ? Colors.white
+                                : widget.color[200]),
                             backgroundColor:
                                 widget.darkMode ? Colors.orange : Colors.white,
                           ),

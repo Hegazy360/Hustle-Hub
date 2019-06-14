@@ -36,7 +36,7 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
   StreamSubscription _playerStateSubscription;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-
+  bool loading = false;
   get _isPlaying => _playerState == PlayerState.playing;
 
   @override
@@ -116,6 +116,7 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
                               fileName: document['file_name'],
                               isActive:
                                   playingFileName == document['file_name'],
+                              loading: loading,
                             ),
                           );
                         }).toList(),
@@ -175,30 +176,31 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
     final Directory tempDir = Directory.systemTemp;
     final String path = '${tempDir.path}/$fileName';
     final File file = File(path);
+    setState(() {
+      loading = true;
+      playingFileName = fileName;
+      _stop();
+    });
     if (file.existsSync()) {
-      final result =
-          await audioPlayer.play(path, isLocal: true, position: playPosition);
+      final result = await audioPlayer.play(path, isLocal: true);
       if (result == 1)
         setState(() {
           _playerState = PlayerState.playing;
-          playingFileName = fileName;
+          loading = false;
         });
 
       return result;
     } else {
       final StorageReference ref =
           FirebaseStorage.instance.ref().child(fileName);
-      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-      await downloadTask.future.then((test) async {
-        final result =
-            await audioPlayer.play(path, isLocal: true, position: playPosition);
-        if (result == 1)
-          setState(() {
-            _playerState = PlayerState.playing;
-            playingFileName = fileName;
-          });
-        return result;
+      await audioPlayer.play(await ref.getDownloadURL()).then((test) {
+        setState(() {
+          _playerState = PlayerState.playing;
+          loading = false;
+        });
       });
+      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+      await downloadTask.future;
     }
 
     return 0;
@@ -215,7 +217,8 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
     if (result == 1) {
       setState(() {
         _playerState = PlayerState.stopped;
-        _position = Duration();
+        _duration = Duration(seconds: 0);
+        _position = Duration(seconds: 0);
       });
     }
     return result;
