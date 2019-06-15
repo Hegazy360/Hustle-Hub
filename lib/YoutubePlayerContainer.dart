@@ -16,7 +16,7 @@ class YoutubePlayerContainer extends StatefulWidget {
   _YoutubePlayerContainerState createState() => _YoutubePlayerContainerState();
 }
 
-class _YoutubePlayerContainerState extends State<YoutubePlayerContainer> {
+class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>with AutomaticKeepAliveClientMixin {
   YoutubePlayerController _controller = YoutubePlayerController();
   ScrollController _scrollController;
   List youtubeList = [];
@@ -25,6 +25,9 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer> {
   bool lastVideo = false;
   var index = 0;
 
+  @override
+  bool get wantKeepAlive => true;
+  
   void listener() {
     if (_controller.value.playerState == PlayerState.ENDED) {
       myInterstitial

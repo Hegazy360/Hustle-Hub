@@ -1,3 +1,5 @@
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 import 'package:flutter/material.dart';
 
 enum PlayerState { stopped, playing, paused }
@@ -7,13 +9,12 @@ class AmbientMusicCard extends StatefulWidget {
   final fileName;
   final color;
   final darkMode;
-  final audioPlayer;
   final play;
   final pause;
   final stop;
   final isPlaying;
-  final position;
-  final duration;
+  // final position;
+  // final duration;
   final isActive;
   final loading;
 
@@ -23,13 +24,12 @@ class AmbientMusicCard extends StatefulWidget {
       this.fileName,
       this.color,
       this.darkMode,
-      this.audioPlayer,
       this.play,
       this.pause,
       this.stop,
       this.isPlaying,
-      this.position,
-      this.duration,
+      // this.position,
+      // this.duration,
       this.isActive,
       this.loading})
       : super(key: key);
@@ -53,11 +53,11 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                 : widget.color.withOpacity(0.4)
             : Colors.white30,
         child: Padding(
-            padding: EdgeInsets.all(15),
+            padding: EdgeInsets.only(top: 15, bottom: 15),
             child: Stack(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.all(12.0),
+                  padding: EdgeInsets.only(top: 12.0, bottom: 12.0),
                   child: Column(
                     children: [
                       Column(
@@ -85,7 +85,8 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                                   onPressed: () =>
                                       widget.isPlaying && widget.isActive
                                           ? widget.pause()
-                                          : widget.play(widget.fileName),
+                                          : widget.play(
+                                              widget.fileName, widget.title),
                                   iconSize: 80.0,
                                   icon: widget.isPlaying && widget.isActive
                                       ? Icon(Icons.pause)
@@ -95,22 +96,48 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                       ),
                       Stack(
                         children: <Widget>[
-                          LinearProgressIndicator(
-                            value: (widget.isActive &&
-                                    widget.position != null &&
-                                    widget.duration != null &&
-                                    widget.position.inMilliseconds > 0 &&
-                                    widget.position.inMilliseconds <
-                                        widget.duration.inMilliseconds)
-                                ? widget.position.inMilliseconds /
-                                    widget.duration.inMilliseconds
-                                : 0.0,
-                            valueColor: AlwaysStoppedAnimation(widget.darkMode
-                                ? Colors.white
-                                : widget.color[200]),
-                            backgroundColor:
-                                widget.darkMode ? Colors.orange : Colors.white,
-                          ),
+                          // LinearProgressIndicator(
+                          //   value: (widget.isActive &&
+                          //           widget.position != null &&
+                          //           widget.duration != null &&
+                          //           widget.position > 0 &&
+                          //           widget.position <
+                          //               widget.duration)
+                          //       ? widget.position /
+                          //           widget.duration
+                          //       : 0.0,
+                          //   valueColor: AlwaysStoppedAnimation(widget.darkMode
+                          //       ? Colors.white
+                          //       : widget.color[200]),
+                          //   backgroundColor:
+                          //       widget.darkMode ? Colors.orange : Colors.white,
+                          // ),
+                          widget.isPlaying && widget.isActive
+                              ? Positioned(
+                                  child: WaveWidget(
+                                  config: CustomConfig(
+                                    blur: MaskFilter.blur(BlurStyle.solid, 5),
+                                    colors: [
+                                      widget.darkMode
+                                          ? Colors.grey[850]
+                                          : Colors.white10,
+                                      widget.darkMode
+                                          ? Colors.grey[800]
+                                          : Colors.white12,
+                                      widget.darkMode
+                                          ? Colors.grey[700]
+                                          : Colors.white24,
+                                      widget.darkMode
+                                          ? Colors.grey[600]
+                                          : Colors.white30
+                                    ],
+                                    durations: [55000, 39440, 30800, 8000],
+                                    heightPercentages: [0.10, 0.13, 0.15, 0.20],
+                                  ),
+                                  size: Size(double.infinity, 10.0),
+                                  waveAmplitude: 0,
+                                ))
+                              : Container()
                         ],
                       )
                     ],

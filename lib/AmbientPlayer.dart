@@ -1,14 +1,144 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:wave/config.dart';
+import 'dart:convert';
 import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:daily_ad1/AmbientMusicCard.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+MediaControl playControl = MediaControl(
+  androidIcon: 'drawable/ic_action_play_arrow',
+  label: 'Play',
+  action: MediaAction.play,
+);
+MediaControl pauseControl = MediaControl(
+  androidIcon: 'drawable/ic_action_pause',
+  label: 'Pause',
+  action: MediaAction.pause,
+);
+MediaControl stopControl = MediaControl(
+  androidIcon: 'drawable/ic_action_stop',
+  label: 'Stop',
+  action: MediaAction.stop,
+);
+
+void backgroundTask() {
+  AudioPlayer audioPlayer = new AudioPlayer();
+  Completer completer = Completer();
+  int position;
+  // int duration;
+
+  void _setPlayingState(resetPosition) {
+    AudioServiceBackground.setState(
+      controls: [pauseControl, stopControl],
+      basicState: BasicPlaybackState.playing,
+      position: position == null || resetPosition ? 0 : position,
+    );
+  }
+
+  void resume() {
+    audioPlayer.resume();
+    if (position == null) {
+      AudioServiceBackground.setState(
+        controls: [stopControl],
+        basicState: BasicPlaybackState.connecting,
+        position: 0,
+      );
+    } else {
+      _setPlayingState(false);
+    }
+  }
+
+  void pause() {
+    audioPlayer.pause();
+    AudioServiceBackground.setState(
+      controls: [playControl, stopControl],
+      basicState: BasicPlaybackState.paused,
+      position: position,
+    );
+  }
+
+  void stop() {
+    audioPlayer.stop();
+    AudioServiceBackground.setState(
+      controls: [],
+      basicState: BasicPlaybackState.stopped,
+    );
+    completer.complete();
+  }
+
+  Future<void> run() async {
+    var playerStateSubscription = audioPlayer.onPlayerStateChanged
+        .where((state) => state == AudioPlayerState.COMPLETED)
+        .listen((state) {
+      stop();
+    });
+
+    var audioPositionSubscription =
+        audioPlayer.onAudioPositionChanged.listen((when) {
+      final connected = position == null;
+      position = when.inMilliseconds;
+      if (connected) {
+        _setPlayingState(false);
+      }
+    });
+    await completer.future;
+    playerStateSubscription.cancel();
+    audioPositionSubscription.cancel();
+  }
+
+  AudioServiceBackground.run(
+    onStart: run,
+    onPlay: resume,
+    onPause: pause,
+    onStop: stop,
+    onPlayFromMediaId: (String fileInfoJson) async {
+      var fileInfo = json.decode(fileInfoJson);
+      var fileName = fileInfo['fileName'];
+      var title = fileInfo['title'];
+      final Directory tempDir = Directory.systemTemp;
+      final String path = '${tempDir.path}/$fileName';
+      final File file = File(path);
+
+      MediaItem mediaItem = MediaItem(
+        id: fileName,
+        artist: 'Ambient Music',
+        album: 'Ambient Music',
+        title: title,
+      );
+      AudioServiceBackground.setMediaItem(mediaItem);
+      AudioServiceBackground.setState(
+        controls: [stopControl],
+        basicState: BasicPlaybackState.buffering,
+        position: 0,
+      );
+      if (file.existsSync()) {
+        await audioPlayer.play(path, isLocal: true).then((response) {
+          _setPlayingState(true);
+        });
+      } else {
+        final StorageReference ref =
+            FirebaseStorage.instance.ref().child(fileName);
+        await audioPlayer.play(await ref.getDownloadURL()).then((response) {
+          _setPlayingState(true);
+        });
+        final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+        await downloadTask.future;
+      }
+    },
+    onClick: (MediaButton button) {
+      if (AudioServiceBackground.state.basicState == BasicPlaybackState.playing)
+        pause();
+      else
+        resume();
+    },
+  );
+}
 
 class AmbientPlayer extends StatefulWidget {
   final color;
@@ -20,45 +150,48 @@ class AmbientPlayer extends StatefulWidget {
   _AmbientPlayerState createState() => _AmbientPlayerState();
 }
 
-class _AmbientPlayerState extends State<AmbientPlayer> {
+class _AmbientPlayerState extends State<AmbientPlayer>
+    with WidgetsBindingObserver {
   Stream<QuerySnapshot> ambientMusic =
       Firestore.instance.collection('ambient').snapshots();
-  AudioPlayer audioPlayer = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
-  Duration _duration;
-  Duration _position;
-  PlayerState _playerState = PlayerState.stopped;
+  // int _duration;
   String playingFileName;
-  AudioPlayerState audioPlayerState;
-  StreamSubscription _durationSubscription;
-  StreamSubscription _positionSubscription;
-  StreamSubscription _playerCompleteSubscription;
-  StreamSubscription _playerErrorSubscription;
-  StreamSubscription _playerStateSubscription;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  bool loading = false;
-  get _isPlaying => _playerState == PlayerState.playing;
 
   @override
   void initState() {
     super.initState();
-    _initAudioPlayer();
-    var initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettings =
-        InitializationSettings(initializationSettingsAndroid, null);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    checkPlayingFile();
+    WidgetsBinding.instance.addObserver(this);
+    connect();
   }
 
   @override
   void dispose() {
     super.dispose();
-    audioPlayer.stop();
-    _durationSubscription?.cancel();
-    _positionSubscription?.cancel();
-    _playerCompleteSubscription?.cancel();
-    _playerErrorSubscription?.cancel();
-    _playerStateSubscription?.cancel();
+    disconnect();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        connect();
+        break;
+      case AppLifecycleState.paused:
+        disconnect();
+        break;
+      default:
+        break;
+    }
+  }
+
+  void connect() async {
+    await AudioService.connect();
+  }
+
+  void disconnect() {
+    AudioService.disconnect();
   }
 
   @override
@@ -85,146 +218,99 @@ class _AmbientPlayerState extends State<AmbientPlayer> {
         ),
         Positioned.fill(
           top: 0,
-          child: StreamBuilder<QuerySnapshot>(
-            stream: ambientMusic,
-            builder:
-                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (snapshot.hasError) return Text('Error: ${snapshot.error}');
-              switch (snapshot.connectionState) {
-                case ConnectionState.waiting:
-                  return Text('Loading...');
-                default:
-                  return SingleChildScrollView(
-                      padding: EdgeInsets.only(bottom: 100),
-                      child: Wrap(
-                        children: snapshot.data.documents
-                            .map((DocumentSnapshot document) {
-                          return Container(
-                            width: MediaQuery.of(context).size.width / 2,
-                            height: 190,
-                            child: AmbientMusicCard(
-                              title: document['title'],
-                              color: widget.color,
-                              darkMode: widget.darkMode,
-                              audioPlayer: audioPlayer,
-                              play: _play,
-                              pause: _pause,
-                              stop: _stop,
-                              isPlaying: _isPlaying,
-                              position: _position,
-                              duration: _duration,
-                              fileName: document['file_name'],
-                              isActive:
-                                  playingFileName == document['file_name'],
-                              loading: loading,
-                            ),
-                          );
-                        }).toList(),
-                      ));
-              }
-            },
-          ),
+          child: StreamBuilder(
+              stream: AudioService.playbackStateStream,
+              builder: (context, snapshot) {
+                PlaybackState state = snapshot.data;
+                return StreamBuilder<QuerySnapshot>(
+                  stream: ambientMusic,
+                  builder: (BuildContext context,
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasError)
+                      return Text('Error: ${snapshot.error}');
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                        return Text('Loading...');
+                      default:
+                        return SingleChildScrollView(
+                            padding: EdgeInsets.only(bottom: 100),
+                            child: Wrap(
+                              children: snapshot.data.documents
+                                  .map((DocumentSnapshot document) {
+                                return Container(
+                                  width: MediaQuery.of(context).size.width / 2,
+                                  height: 190,
+                                  child: AmbientMusicCard(
+                                    title: document['title'],
+                                    color: widget.color,
+                                    darkMode: widget.darkMode,
+                                    play: playFromMediaId,
+                                    pause: AudioService.pause,
+                                    stop: AudioService.stop,
+                                    isPlaying: state?.basicState ==
+                                            BasicPlaybackState.playing ||
+                                        AudioServiceBackground
+                                                .state.basicState ==
+                                            BasicPlaybackState.playing,
+                                    // position: state?.currentPosition,
+                                    // duration: _duration,
+                                    fileName: document['file_name'],
+                                    isActive: playingFileName ==
+                                        document['file_name'],
+                                    loading: state?.basicState ==
+                                        BasicPlaybackState.buffering,
+                                  ),
+                                );
+                              }).toList(),
+                            ));
+                    }
+                  },
+                );
+              }),
         ),
       ],
     );
   }
 
-  void _initAudioPlayer() {
-    _durationSubscription =
-        audioPlayer.onDurationChanged.listen((duration) => setState(() {
-              _duration = duration;
-            }));
+  void checkPlayingFile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var savedPlayingFileName = prefs.getString('playingFileName');
+    // var savedPlayingFileNameDuration = prefs.getInt('playingFileNameDuration');
 
-    _positionSubscription =
-        audioPlayer.onAudioPositionChanged.listen((p) => setState(() {
-              _position = p;
-            }));
-
-    _playerCompleteSubscription =
-        audioPlayer.onPlayerCompletion.listen((event) {
-      _onComplete();
-      setState(() {
-        _position = _duration;
-      });
-    });
-
-    _playerErrorSubscription = audioPlayer.onPlayerError.listen((msg) {
-      print('audioPlayer error : $msg');
-      setState(() {
-        _playerState = PlayerState.stopped;
-        _duration = Duration(seconds: 0);
-        _position = Duration(seconds: 0);
-      });
-    });
-
-    audioPlayer.onPlayerStateChanged.listen((state) {
-      if (!mounted) return;
-      setState(() {
-        audioPlayerState = state;
-      });
-    });
+    if (savedPlayingFileName != null) {
+      if (this.mounted)
+        setState(() {
+          playingFileName = savedPlayingFileName;
+        });
+    }
+    // if (savedPlayingFileNameDuration != null) {
+    //   if (this.mounted)
+    //     setState(() {
+    //       _duration = savedPlayingFileNameDuration;
+    //     });
+    // }
   }
 
-  Future<int> _play(fileName) async {
-    final playPosition = (_position != null &&
-            _duration != null &&
-            _position.inMilliseconds > 0 &&
-            _position.inMilliseconds < _duration.inMilliseconds)
-        ? _position
-        : null;
-
-    final Directory tempDir = Directory.systemTemp;
-    final String path = '${tempDir.path}/$fileName';
-    final File file = File(path);
-    setState(() {
-      loading = true;
-      playingFileName = fileName;
-      _stop();
-    });
-    if (file.existsSync()) {
-      final result = await audioPlayer.play(path, isLocal: true);
-      if (result == 1)
-        setState(() {
-          _playerState = PlayerState.playing;
-          loading = false;
-        });
-
-      return result;
+  void playFromMediaId(fileName, title) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String fileInfoJson =
+        "{\"fileName\":\"" + fileName + "\",\"title\":\"" + title + "\"}";
+    if (AudioService.playbackState == null || AudioService.playbackState?.basicState == BasicPlaybackState.none ||
+        AudioService.playbackState?.basicState == BasicPlaybackState.stopped) {
+      AudioService.start(
+        backgroundTask: backgroundTask,
+        resumeOnClick: true,
+        androidNotificationChannelName: 'Hustle Hub Player',
+        androidNotificationIcon: 'mipmap/ic_launcher',
+      ).then((response) {
+        AudioService.playFromMediaId(fileInfoJson);
+      });
     } else {
-      final StorageReference ref =
-          FirebaseStorage.instance.ref().child(fileName);
-      await audioPlayer.play(await ref.getDownloadURL()).then((test) {
-        setState(() {
-          _playerState = PlayerState.playing;
-          loading = false;
-        });
-      });
-      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-      await downloadTask.future;
+      AudioService.playFromMediaId(fileInfoJson);
     }
-
-    return 0;
-  }
-
-  Future<int> _pause() async {
-    final result = await audioPlayer.pause();
-    if (result == 1) setState(() => _playerState = PlayerState.paused);
-    return result;
-  }
-
-  Future<int> _stop() async {
-    final result = await audioPlayer.stop();
-    if (result == 1) {
-      setState(() {
-        _playerState = PlayerState.stopped;
-        _duration = Duration(seconds: 0);
-        _position = Duration(seconds: 0);
-      });
-    }
-    return result;
-  }
-
-  void _onComplete() {
-    setState(() => _playerState = PlayerState.stopped);
+    await prefs.setString('playingFileName', fileName);
+    setState(() {
+      playingFileName = fileName;
+    });
   }
 }
