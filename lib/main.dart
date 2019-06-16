@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:daily_ad1/AdviceCard.dart';
 import 'package:daily_ad1/AmbientPlayer.dart';
+import 'package:daily_ad1/PodcastPlayer.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:daily_ad1/YoutubePlayerContainer.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -29,7 +30,7 @@ class _MyAppState extends State<MyApp> {
     Colors.lightBlue,
     Colors.pink,
   ];
-  Random random = new Random();
+  Random random = Random();
   int index = 0;
   bool darkMode = false;
 
@@ -64,7 +65,7 @@ class _MyAppState extends State<MyApp> {
       home: Center(
         child: Container(
           child: DefaultTabController(
-              length: 3,
+              length: 4,
               child: Scaffold(
                 appBar: AppBar(
                   backgroundColor: darkMode ? Colors.grey[900] : colors[index],
@@ -93,8 +94,12 @@ class _MyAppState extends State<MyApp> {
                         text: "Ambient",
                       ),
                       Tab(
+                        icon: Icon(Icons.mic),
+                        text: "Podcast",
+                      ),
+                      Tab(
                         icon: Icon(Icons.play_circle_outline),
-                        text: "Motivational",
+                        text: "Videos",
                       ),
                     ],
                   ),
@@ -104,11 +109,12 @@ class _MyAppState extends State<MyApp> {
                 ),
                 body: TabBarView(
                   children: [
-                    new AdviceCard(
+                    AdviceCard(
                         color: darkMode ? Colors.grey[900] : colors[index],
                         generateColor: generateColor),
-                    new AmbientPlayer(color: colors[index], darkMode: darkMode),
-                    new YoutubePlayerContainer(
+                    AmbientPlayer(color: colors[index], darkMode: darkMode),
+                    PodcastPlayer(color: colors[index], darkMode: darkMode),
+                    YoutubePlayerContainer(
                       color: darkMode ? Colors.grey[900] : colors[index],
                       darkMode: this.darkMode,
                     ),

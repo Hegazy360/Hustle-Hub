@@ -1,30 +1,27 @@
 import 'dart:async';
-import 'package:wave/wave.dart';
-import 'package:wave/config.dart';
 import 'package:flutter/material.dart';
 import 'package:connectivity/connectivity.dart';
-import 'package:daily_ad1/AmbientMusicCard.dart';
+import 'package:daily_ad1/PodcastCard.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:daily_ad1/BackgroundAudioService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AmbientPlayer extends StatefulWidget {
+class PodcastPlayer extends StatefulWidget {
   final color;
   final darkMode;
 
-  const AmbientPlayer({Key key, this.color, this.darkMode}) : super(key: key);
+  const PodcastPlayer({Key key, this.color, this.darkMode}) : super(key: key);
 
   @override
-  _AmbientPlayerState createState() => _AmbientPlayerState();
+  _PodcastPlayerState createState() => _PodcastPlayerState();
 }
 
-class _AmbientPlayerState extends State<AmbientPlayer>
+class _PodcastPlayerState extends State<PodcastPlayer>
     with WidgetsBindingObserver {
   Stream<QuerySnapshot> ambientMusic =
-      Firestore.instance.collection('ambient').snapshots();
-  // int _duration;
+      Firestore.instance.collection('podcasts').snapshots();
   String playingFileName;
   var connectivityType;
   var connectivityListener;
@@ -77,80 +74,52 @@ class _AmbientPlayerState extends State<AmbientPlayer>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Positioned.fill(
-          child: WaveWidget(
-            config: CustomConfig(
-              blur: MaskFilter.blur(BlurStyle.solid, 5),
-              colors: [
-                widget.darkMode ? Colors.grey[850] : widget.color[400],
-                widget.darkMode ? Colors.grey[800] : widget.color[300],
-                widget.darkMode ? Colors.grey[700] : widget.color[200],
-                widget.darkMode ? Colors.grey[600] : widget.color[100]
-              ],
-              durations: [35000, 19440, 10800, 6000],
-              heightPercentages: [0.30, 0.33, 0.35, 0.40],
-            ),
-            backgroundColor: widget.darkMode ? Colors.grey[900] : Colors.white,
-            size: Size(double.infinity, double.infinity),
-            waveAmplitude: 0,
-          ),
-        ),
-        Positioned.fill(
-          top: 0,
-          child: StreamBuilder(
-              stream: AudioService.playbackStateStream,
-              builder: (context, snapshot) {
-                PlaybackState state = snapshot.data;
-                return StreamBuilder<QuerySnapshot>(
-                  stream: ambientMusic,
-                  builder: (BuildContext context,
-                      AsyncSnapshot<QuerySnapshot> snapshot) {
-                    if (snapshot.hasError)
-                      return Text('Error: ${snapshot.error}');
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return Text('Loading...');
-                      default:
-                        return SingleChildScrollView(
-                            padding: EdgeInsets.only(bottom: 100),
-                            child: Wrap(
-                              children: snapshot.data.documents
-                                  .map((DocumentSnapshot document) {
-                                return Container(
-                                  width: MediaQuery.of(context).size.width / 2,
-                                  height: 190,
-                                  child: AmbientMusicCard(
-                                    title: document['title'],
-                                    color: widget.color,
-                                    darkMode: widget.darkMode,
-                                    play: playFromMediaId,
-                                    pause: AudioService.pause,
-                                    stop: AudioService.stop,
-                                    isPlaying: state?.basicState ==
-                                            BasicPlaybackState.playing ||
-                                        AudioServiceBackground
-                                                .state.basicState ==
-                                            BasicPlaybackState.playing,
-                                    // position: state?.currentPosition,
-                                    // duration: _duration,
-                                    fileName: document['file_name'],
-                                    isActive: playingFileName ==
-                                        document['file_name'],
-                                    loading: state?.basicState ==
-                                        BasicPlaybackState.buffering,
-                                  ),
-                                );
-                              }).toList(),
-                            ));
-                    }
-                  },
-                );
-              }),
-        ),
-      ],
-    );
+    return StreamBuilder(
+        stream: AudioService.playbackStateStream,
+        builder: (context, snapshot) {
+          PlaybackState state = snapshot.data;
+          return StreamBuilder<QuerySnapshot>(
+            stream: ambientMusic,
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+              switch (snapshot.connectionState) {
+                case ConnectionState.waiting:
+                  return Text('Loading...');
+                default:
+                  return SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: 100),
+                      child: Wrap(
+                        children: snapshot.data.documents
+                            .map((DocumentSnapshot document) {
+                          return Container(
+                            width: MediaQuery.of(context).size.width,
+                            child: PodcastCard(
+                              podcast: document,
+                              color: widget.color,
+                              darkMode: widget.darkMode,
+                              play: playFromMediaId,
+                              pause: AudioService.pause,
+                              stop: AudioService.stop,
+                              isPlaying: state?.basicState ==
+                                      BasicPlaybackState.playing ||
+                                  AudioServiceBackground.state.basicState ==
+                                      BasicPlaybackState.playing,
+                              // position: state?.currentPosition,
+                              // duration: _duration,
+                              // fileName: document['file_name'],
+                              // isActive: playingFileName ==
+                              //     document['file_name'],
+                              loading: state?.basicState ==
+                                  BasicPlaybackState.buffering,
+                            ),
+                          );
+                        }).toList(),
+                      ));
+              }
+            },
+          );
+        });
   }
 
   void checkPlayingFile() async {
@@ -173,7 +142,8 @@ class _AmbientPlayerState extends State<AmbientPlayer>
   }
 
   void playFromMediaId(fileName, title) {
-    if (connectivityType == ConnectivityResult.mobile && !connectivityWarningDisplayed) {
+    if (connectivityType == ConnectivityResult.mobile &&
+        !connectivityWarningDisplayed) {
       Alert(
         context: context,
         type: AlertType.warning,
