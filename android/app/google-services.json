@@ -1,40 +1,39 @@
 {
   "project_info": {
-    "project_number": "617578673821",
-    "firebase_url": "https://daily-ad1.firebaseio.com",
-    "project_id": "daily-ad1",
-    "storage_bucket": "daily-ad1.appspot.com"
+    "project_number": "221934925500",
+    "firebase_url": "https://hustle-hub.firebaseio.com",
+    "project_id": "hustle-hub",
+    "storage_bucket": "hustle-hub.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:617578673821:android:7c8aeb86e9f633de",
+        "mobilesdk_app_id": "1:221934925500:android:7c8aeb86e9f633de",
         "android_client_info": {
           "package_name": "com.mohega.daily_ad1"
         }
       },
       "oauth_client": [
         {
-          "client_id": "617578673821-h0b4ebojicak0gtvtsaboia3arq5ojc1.apps.googleusercontent.com",
+          "client_id": "221934925500-o8s7pid12vav0md425fmnnolbijr6nrl.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDFjsNzrOCwYJzEqkg8DSCLcen_e_9tkp0"
+          "current_key": "AIzaSyBcwjOZ2nu2Z7r__AeLTvMGF-E_47nlgbY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "617578673821-h0b4ebojicak0gtvtsaboia3arq5ojc1.apps.googleusercontent.com",
+              "client_id": "221934925500-o8s7pid12vav0md425fmnnolbijr6nrl.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
         }
-      },
-      "admob_app_id": "ca-app-pub-8400135927246890~2282634635"
+      }
     }
   ],
   "configuration_version": "1"

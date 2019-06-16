@@ -4,9 +4,12 @@ import 'dart:convert';
 import 'package:wave/wave.dart';
 import 'package:wave/config.dart';
 import 'package:flutter/material.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:daily_ad1/AmbientMusicCard.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,8 +104,8 @@ void backgroundTask() {
       var fileInfo = json.decode(fileInfoJson);
       var fileName = fileInfo['fileName'];
       var title = fileInfo['title'];
-      final Directory tempDir = Directory.systemTemp;
-      final String path = '${tempDir.path}/$fileName';
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String path = '${directory.path}/$fileName';
       final File file = File(path);
 
       MediaItem mediaItem = MediaItem(
@@ -124,11 +127,13 @@ void backgroundTask() {
       } else {
         final StorageReference ref =
             FirebaseStorage.instance.ref().child(fileName);
-        await audioPlayer.play(await ref.getDownloadURL()).then((response) {
-          _setPlayingState(true);
-        });
+
         final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-        await downloadTask.future;
+        await downloadTask.future.then((value) async {
+          await audioPlayer.play(path).then((response) {
+            _setPlayingState(true);
+          });
+        });
       }
     },
     onClick: (MediaButton button) {
@@ -156,6 +161,9 @@ class _AmbientPlayerState extends State<AmbientPlayer>
       Firestore.instance.collection('ambient').snapshots();
   // int _duration;
   String playingFileName;
+  var connectivityType;
+  var connectivityListener;
+  bool connectivityWarningDisplayed = false;
 
   @override
   void initState() {
@@ -163,6 +171,13 @@ class _AmbientPlayerState extends State<AmbientPlayer>
     checkPlayingFile();
     WidgetsBinding.instance.addObserver(this);
     connect();
+    connectivityType = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      setState(() {
+        connectivityType = result;
+      });
+    });
   }
 
   @override
@@ -170,6 +185,7 @@ class _AmbientPlayerState extends State<AmbientPlayer>
     super.dispose();
     disconnect();
     WidgetsBinding.instance.removeObserver(this);
+    connectivityType.cancel();
   }
 
   @override
@@ -291,11 +307,54 @@ class _AmbientPlayerState extends State<AmbientPlayer>
     // }
   }
 
-  void playFromMediaId(fileName, title) async {
+  void playFromMediaId(fileName, title) {
+    if (connectivityType == ConnectivityResult.mobile && !connectivityWarningDisplayed) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Connection Warning",
+        desc: "It's recommended to turn on WiFi when streaming",
+        buttons: [
+          DialogButton(
+            child: Text(
+              "Cancel",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                connectivityWarningDisplayed = true;
+              });
+            },
+            color: Colors.red,
+          ),
+          DialogButton(
+            child: Text(
+              "Proceed",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              playMedia(fileName, title);
+              setState(() {
+                connectivityWarningDisplayed = true;
+              });
+            },
+            color: widget.color,
+          )
+        ],
+      ).show();
+    } else {
+      playMedia(fileName, title);
+    }
+  }
+
+  void playMedia(fileName, title) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String fileInfoJson =
         "{\"fileName\":\"" + fileName + "\",\"title\":\"" + title + "\"}";
-    if (AudioService.playbackState == null || AudioService.playbackState?.basicState == BasicPlaybackState.none ||
+    if (AudioService.playbackState == null ||
+        AudioService.playbackState?.basicState == BasicPlaybackState.none ||
         AudioService.playbackState?.basicState == BasicPlaybackState.stopped) {
       AudioService.start(
         backgroundTask: backgroundTask,

@@ -16,7 +16,8 @@ class YoutubePlayerContainer extends StatefulWidget {
   _YoutubePlayerContainerState createState() => _YoutubePlayerContainerState();
 }
 
-class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>with AutomaticKeepAliveClientMixin {
+class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
+    with AutomaticKeepAliveClientMixin {
   YoutubePlayerController _controller = YoutubePlayerController();
   ScrollController _scrollController;
   List youtubeList = [];
@@ -27,7 +28,7 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>with Aut
 
   @override
   bool get wantKeepAlive => true;
-  
+
   void listener() {
     if (_controller.value.playerState == PlayerState.ENDED) {
       myInterstitial
@@ -153,50 +154,56 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>with Aut
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: EdgeInsets.only(bottom: 100),
-            physics: BouncingScrollPhysics(),
-            controller: _scrollController,
-            itemCount: youtubeList.length,
-            itemBuilder: (context, position) {
-              return GestureDetector(
-                  onTap: (() {
-                    myInterstitial
-                      ..load()
-                      ..show(
-                        anchorType: AnchorType.bottom,
-                        anchorOffset: 0.0,
-                      );
-                    setState(() {
-                      index = position;
-                      firstVideo = position == 0;
-                      lastVideo = position == youtubeList.length - 1;
-                    });
-                  }),
-                  child: Card(
-                    color: position == index ? widget.color : Colors.white,
-                    child: Row(
-                      children: <Widget>[
-                        Image.network(
-                          youtubeList[position]['thumbnail'],
+          child: Container(
+              color: widget.darkMode ? Colors.grey[900] : Colors.white,
+              child: ListView.builder(
+                padding: EdgeInsets.only(bottom: 100),
+                physics: BouncingScrollPhysics(),
+                controller: _scrollController,
+                itemCount: youtubeList.length,
+                itemBuilder: (context, position) {
+                  return GestureDetector(
+                      onTap: (() {
+                        myInterstitial
+                          ..load()
+                          ..show(
+                            anchorType: AnchorType.bottom,
+                            anchorOffset: 0.0,
+                          );
+                        setState(() {
+                          index = position;
+                          firstVideo = position == 0;
+                          lastVideo = position == youtubeList.length - 1;
+                        });
+                      }),
+                      child: Card(
+                        color: position == index
+                            ? widget.color
+                            : widget.darkMode ? Colors.grey[600] : Colors.white,
+                        child: Row(
+                          children: <Widget>[
+                            Image.network(
+                              youtubeList[position]['thumbnail'],
+                            ),
+                            Flexible(
+                                child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Text(
+                                youtubeList[position]['title'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: widget.darkMode
+                                        ? Colors.white
+                                        : position == index
+                                            ? Colors.white
+                                            : Colors.black),
+                              ),
+                            ))
+                          ],
                         ),
-                        Flexible(
-                            child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            youtubeList[position]['title'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: position == index
-                                    ? Colors.white
-                                    : Colors.black),
-                          ),
-                        ))
-                      ],
-                    ),
-                  ));
-            },
-          ),
+                      ));
+                },
+              )),
         )
       ],
     );
