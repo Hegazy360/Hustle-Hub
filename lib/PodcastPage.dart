@@ -1,15 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:expandable/expandable.dart';
 import 'package:flutter_html/flutter_html.dart';
 
 class PodcastPage extends StatefulWidget {
   final podcast;
+  final play;
 
   const PodcastPage({
     Key key,
     this.podcast,
+    this.play,
   }) : super(key: key);
+
   @override
   _PodcastPageState createState() => _PodcastPageState();
 }
@@ -56,6 +60,7 @@ class _PodcastPageState extends State<PodcastPage> {
               expandedHeight: 300.0,
               floating: false,
               pinned: true,
+              automaticallyImplyLeading: false,
               bottom: PreferredSize(
                 preferredSize: Size(MediaQuery.of(context).size.width, 80),
                 child: Hero(
@@ -115,10 +120,12 @@ class _PodcastPageState extends State<PodcastPage> {
                 child: CircularProgressIndicator(),
               )
             : ListView.builder(
+                padding: EdgeInsets.only(bottom: 100),
                 itemCount: episodes.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Card(
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Container(
                           width: MediaQuery.of(context).size.width * 0.2,
@@ -128,14 +135,52 @@ class _PodcastPageState extends State<PodcastPage> {
                               Icons.play_arrow,
                               size: 60,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              widget.play(episodes[index]['id'],
+                                  episodes[index]['title'], episodes[index]['audio']);
+                            },
                           ),
                         ),
-                        Column(
-                          children: <Widget>[
-                            Text(episodes[index]['title']),
-                            Html(data: episodes[index]['description'])
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              ExpandablePanel(
+                                header: Padding(
+                                    padding: EdgeInsets.only(top: 10),
+                                    child: Text(
+                                      episodes[index]['title'],
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    )),
+                                collapsed: Container(
+                                    height: 55,
+                                    child: Html(
+                                      data: episodes[index]['description'],
+                                      defaultTextStyle: TextStyle(fontSize: 15),
+                                    ))
+                                // Text(
+                                //   Html(data: episodes[index]['description']),
+                                //   softWrap: true,
+                                //   maxLines: 2,
+                                //   overflow: TextOverflow.ellipsis,
+                                // )
+                                ,
+                                expanded: Container(
+                                    child: Html(
+                                  data: episodes[index]['description'],
+                                  defaultTextStyle: TextStyle(fontSize: 15),
+                                )
+                                    // Text(
+                                    //   article.body,
+                                    //   softWrap: true,
+                                    // )
+                                    ),
+                                tapHeaderToExpand: true,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

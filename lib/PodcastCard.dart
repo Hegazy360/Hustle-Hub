@@ -51,6 +51,7 @@ class _PodcastCardState extends State<PodcastCard> {
               builder: (BuildContext context) {
                 return PodcastPage(
                   podcast: widget.podcast,
+                  play: widget.play,
                 );
               },
               fullscreenDialog: true));

@@ -94,38 +94,43 @@ void backgroundTask() {
     onStop: stop,
     onPlayFromMediaId: (String fileInfoJson) async {
       var fileInfo = json.decode(fileInfoJson);
-      if (fileInfo['type'] == 'ambient') {
-        var fileName = fileInfo['fileName'];
-        var title = fileInfo['title'];
-        final Directory directory = await getApplicationDocumentsDirectory();
-        final String path = '${directory.path}/$fileName';
-        final File file = File(path);
+      var fileName = fileInfo['fileName'];
+      var title = fileInfo['title'];
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String path = '${directory.path}/$fileName';
+      final File file = File(path);
 
-        MediaItem mediaItem = MediaItem(
-          id: fileName,
-          artist: 'Ambient Music',
-          album: 'Ambient Music',
-          title: title,
-        );
-        AudioServiceBackground.setMediaItem(mediaItem);
-        AudioServiceBackground.setState(
-          controls: [stopControl],
-          basicState: BasicPlaybackState.buffering,
-          position: 0,
-        );
-        if (file.existsSync()) {
-          await audioPlayer.play(path, isLocal: true).then((response) {
-            _setPlayingState(true);
-          });
-        } else {
+      MediaItem mediaItem = MediaItem(
+        id: fileName,
+        artist: 'Ambient Music',
+        album: 'Ambient Music',
+        title: title,
+      );
+      AudioServiceBackground.setMediaItem(mediaItem);
+      AudioServiceBackground.setState(
+        controls: [stopControl],
+        basicState: BasicPlaybackState.buffering,
+        position: 0,
+      );
+
+      if (file.existsSync()) {
+        await audioPlayer.play(path, isLocal: true).then((response) {
+          _setPlayingState(true);
+        });
+      } else {
+        if (fileInfo['type'] == 'ambient') {
           final StorageReference ref =
               FirebaseStorage.instance.ref().child(fileName);
 
           final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
           await downloadTask.future.then((value) async {
-            await audioPlayer.play(path).then((response) {
+            await audioPlayer.play(path, isLocal: true).then((response) {
               _setPlayingState(true);
             });
+          });
+        } else {
+          await audioPlayer.play(fileInfo['audioUrl']).then((response) {
+            _setPlayingState(true);
           });
         }
       }

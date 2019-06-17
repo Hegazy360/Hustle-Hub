@@ -20,7 +20,7 @@ class PodcastPlayer extends StatefulWidget {
 
 class _PodcastPlayerState extends State<PodcastPlayer>
     with WidgetsBindingObserver {
-  Stream<QuerySnapshot> ambientMusic =
+  Stream<QuerySnapshot> podcasts =
       Firestore.instance.collection('podcasts').snapshots();
   String playingFileName;
   var connectivityType;
@@ -79,7 +79,7 @@ class _PodcastPlayerState extends State<PodcastPlayer>
         builder: (context, snapshot) {
           PlaybackState state = snapshot.data;
           return StreamBuilder<QuerySnapshot>(
-            stream: ambientMusic,
+            stream: podcasts,
             builder:
                 (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (snapshot.hasError) return Text('Error: ${snapshot.error}');
@@ -141,7 +141,7 @@ class _PodcastPlayerState extends State<PodcastPlayer>
     // }
   }
 
-  void playFromMediaId(fileName, title) {
+  void playFromMediaId(fileName, title, audioUrl) {
     if (connectivityType == ConnectivityResult.mobile &&
         !connectivityWarningDisplayed) {
       Alert(
@@ -170,7 +170,7 @@ class _PodcastPlayerState extends State<PodcastPlayer>
             ),
             onPressed: () {
               Navigator.pop(context);
-              playMedia(fileName, title);
+              playMedia(fileName, title, audioUrl);
               setState(() {
                 connectivityWarningDisplayed = true;
               });
@@ -180,14 +180,22 @@ class _PodcastPlayerState extends State<PodcastPlayer>
         ],
       ).show();
     } else {
-      playMedia(fileName, title);
+      playMedia(fileName, title, audioUrl);
     }
   }
 
-  void playMedia(fileName, title) async {
+  void playMedia(fileName, title, audioUrl) async {
+    print(fileName);
+    print(audioUrl);
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String fileInfoJson =
-        "{\"fileName\":\"" + fileName + "\",\"title\":\"" + title + "\"}";
+    String fileInfoJson = "{\"fileName\":\"" +
+        fileName +
+        "\",\"title\":\"" +
+        title +
+        "\",\"audioUrl\":\"" +
+        audioUrl +
+        "\",\"type\":\"podcast\"}";
+    print(fileInfoJson);
     if (AudioService.playbackState == null ||
         AudioService.playbackState?.basicState == BasicPlaybackState.none ||
         AudioService.playbackState?.basicState == BasicPlaybackState.stopped) {
