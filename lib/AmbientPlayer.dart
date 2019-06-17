@@ -173,7 +173,8 @@ class _AmbientPlayerState extends State<AmbientPlayer>
   }
 
   void playFromMediaId(fileName, title) {
-    if (connectivityType == ConnectivityResult.mobile && !connectivityWarningDisplayed) {
+    if (connectivityType == ConnectivityResult.mobile &&
+        !connectivityWarningDisplayed) {
       Alert(
         context: context,
         type: AlertType.warning,
@@ -216,8 +217,11 @@ class _AmbientPlayerState extends State<AmbientPlayer>
 
   void playMedia(fileName, title) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String fileInfoJson =
-        "{\"fileName\":\"" + fileName + "\",\"title\":\"" + title + "\"}";
+    String fileInfoJson = "{\"fileName\":\"" +
+        fileName +
+        "\",\"title\":\"" +
+        title +
+        "\",\"type\":\"ambient\"}";
     if (AudioService.playbackState == null ||
         AudioService.playbackState?.basicState == BasicPlaybackState.none ||
         AudioService.playbackState?.basicState == BasicPlaybackState.stopped) {

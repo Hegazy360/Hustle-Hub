@@ -21,11 +21,10 @@ class _MyAppState extends State<MyApp> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   List colors = [
-    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
-    Colors.red,
-    Colors.green,
-    Colors.blue,
     Colors.cyan,
+    Colors.redAccent,
+    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
+    Colors.green,
     Colors.lightGreen,
     Colors.lightBlue,
     Colors.pink,

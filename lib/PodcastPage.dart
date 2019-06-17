@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_html/flutter_html.dart';
 
 class PodcastPage extends StatefulWidget {
   final podcast;
@@ -12,6 +15,36 @@ class PodcastPage extends StatefulWidget {
 }
 
 class _PodcastPageState extends State<PodcastPage> {
+  List episodes = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    getEpisodes();
+    super.initState();
+  }
+
+  void getEpisodes() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    var response = await http.get(
+      'https://listen-api.listennotes.com/api/v2/podcasts/${widget.podcast['listennotes_id']}?sort=recent_first',
+      // Send authorization headers to the backend.
+      headers: {'X-ListenAPI-Key': "af3f605216fd4033bb545e9beaf14196"},
+    );
+    if (response.statusCode == 200) {
+      String responseBody = response.body;
+      var responseJSON = json.decode(responseBody);
+      print(responseJSON['episodes']);
+      setState(() {
+        isLoading = false;
+        episodes = responseJSON['episodes'];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,9 +110,37 @@ class _PodcastPageState extends State<PodcastPage> {
             ),
           ];
         },
-        body: Center(
-          child: Text("Sample Text"),
-        ),
+        body: isLoading
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : ListView.builder(
+                itemCount: episodes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Card(
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          height: 100,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.play_arrow,
+                              size: 60,
+                            ),
+                            onPressed: () {},
+                          ),
+                        ),
+                        Column(
+                          children: <Widget>[
+                            Text(episodes[index]['title']),
+                            Html(data: episodes[index]['description'])
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
       ),
     );
     // return MaterialApp(
