@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -87,6 +88,27 @@ void backgroundTask() {
     audioPositionSubscription.cancel();
   }
 
+  Future<String> _downloadFile(String url2, String filename) async {
+    var url = url2;
+
+    var isRedirect = true;
+
+    while (isRedirect) {
+      final client = http.Client();
+      final request = http.Request('GET', Uri.parse(url))
+        ..followRedirects = false;
+      print(request.headers);
+      final response = await client.send(request);
+
+      if (response.statusCode == HttpStatus.movedTemporarily) {
+        isRedirect = response.isRedirect;
+        url = response.headers['location'];
+      } else if (response.statusCode == HttpStatus.ok) {
+        return url;
+      }
+    }
+  }
+
   AudioServiceBackground.run(
     onStart: run,
     onPlay: resume,
@@ -96,9 +118,6 @@ void backgroundTask() {
       var fileInfo = json.decode(fileInfoJson);
       var fileName = fileInfo['fileName'];
       var title = fileInfo['title'];
-      final Directory directory = await getApplicationDocumentsDirectory();
-      final String path = '${directory.path}/$fileName';
-      final File file = File(path);
 
       MediaItem mediaItem = MediaItem(
         id: fileName,
@@ -113,26 +132,27 @@ void backgroundTask() {
         position: 0,
       );
 
-      if (file.existsSync()) {
-        await audioPlayer.play(path, isLocal: true).then((response) {
-          _setPlayingState(true);
-        });
-      } else {
-        if (fileInfo['type'] == 'ambient') {
+      if (fileInfo['type'] == 'ambient') {
+        final Directory directory = await getApplicationDocumentsDirectory();
+        final String path = '${directory.path}/$fileName';
+        final File file = File(path);
+        if (file.existsSync()) {
+          await audioPlayer.play(path, isLocal: true).then((response) {
+            _setPlayingState(true);
+          });
+        } else {
           final StorageReference ref =
               FirebaseStorage.instance.ref().child(fileName);
 
           final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-          await downloadTask.future.then((value) async {
-            await audioPlayer.play(path, isLocal: true).then((response) {
-              _setPlayingState(true);
-            });
-          });
-        } else {
-          await audioPlayer.play(fileInfo['audioUrl']).then((response) {
+          await downloadTask.future.then((value) async {});
+        }
+      } else {
+        await _downloadFile(fileInfo['audioUrl'], fileName).then((path) async {
+          await audioPlayer.play(path).then((response) {
             _setPlayingState(true);
           });
-        }
+        });
       }
     },
     onClick: (MediaButton button) {

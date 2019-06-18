@@ -8,7 +8,6 @@ class PodcastCard extends StatefulWidget {
   // final fileName;
   final color;
   final darkMode;
-  final play;
   final pause;
   final stop;
   final isPlaying;
@@ -23,7 +22,6 @@ class PodcastCard extends StatefulWidget {
       // this.fileName,
       this.color,
       this.darkMode,
-      this.play,
       this.pause,
       this.stop,
       this.isPlaying,
@@ -51,7 +49,6 @@ class _PodcastCardState extends State<PodcastCard> {
               builder: (BuildContext context) {
                 return PodcastPage(
                   podcast: widget.podcast,
-                  play: widget.play,
                 );
               },
               fullscreenDialog: true));
