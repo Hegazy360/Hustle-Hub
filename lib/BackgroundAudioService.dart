@@ -145,7 +145,11 @@ void backgroundTask() {
               FirebaseStorage.instance.ref().child(fileName);
 
           final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-          await downloadTask.future.then((value) async {});
+          await downloadTask.future.then((value) async {
+            await audioPlayer.play(path, isLocal: true).then((response) {
+              _setPlayingState(true);
+            });
+          });
         }
       } else {
         await _downloadFile(fileInfo['audioUrl'], fileName).then((path) async {

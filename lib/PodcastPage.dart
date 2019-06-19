@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:expandable/expandable.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:daily_ad1/BackgroundAudioService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity/connectivity.dart';
-import 'package:audio_service/audio_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PodcastPage extends StatefulWidget {
   final podcast;
@@ -142,9 +143,11 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                     height: 110,
                                     margin: EdgeInsets.only(
                                         top: 5, right: 5, bottom: 5, left: 5),
-                                    child: Image.network(
-                                      widget.podcast['thumbnail_url'],
-                                    ),
+                                    child: CachedNetworkImage(
+                                        imageUrl:
+                                            widget.podcast['thumbnail_url'],
+                                        errorWidget: (context, url, error) =>
+                                            new Icon(Icons.error)),
                                   )
                                 ],
                               ),
@@ -196,7 +199,8 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                   height: 100,
                                   child: isActive && loading
                                       ? Padding(
-                                          padding: EdgeInsets.fromLTRB(20,25,20,25),
+                                          padding: EdgeInsets.fromLTRB(
+                                              22, 31, 22, 31),
                                           child: CircularProgressIndicator(
                                             backgroundColor: Colors.white,
                                             valueColor: AlwaysStoppedAnimation(

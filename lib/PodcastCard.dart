@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:daily_ad1/PodcastPage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 enum PlayerState { stopped, playing, paused }
 
@@ -90,8 +91,9 @@ class _PodcastCardState extends State<PodcastCard> {
                 Container(
                   height: 110,
                   margin: EdgeInsets.only(top: 5, right: 5, bottom: 5),
-                  child: Image.network(
-                    widget.podcast['thumbnail_url'],
+                  child: CachedNetworkImage(
+                    imageUrl: widget.podcast['thumbnail_url'],
+                    errorWidget: (context, url, error) => new Icon(Icons.error),
                   ),
                 )
               ],

@@ -23,8 +23,8 @@ dependencies:
   http: ^0.12.0+2
   flushbar: "1.5.3"
   expandable: ^3.0.0+1
-  audioplayers: ^0.12.1
-  path_provider: ^1.1.0
+  audioplayers: any
+  path_provider: any
   audio_service: ^0.3.0
   rflutter_alert: ^1.0.2
   connectivity: ^0.4.3+2
@@ -33,6 +33,7 @@ dependencies:
   cloud_firestore: ^0.12.5
   clipboard_manager: ^0.0.1
   shared_preferences: ^0.5.3+1
+  cached_network_image: any
   flutter_html: ^0.10.1+hotfix.1
   youtube_player_flutter: ^3.0.0-beta.4
   flutter_local_notifications: ^0.7.1+1

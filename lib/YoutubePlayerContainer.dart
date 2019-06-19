@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:audio_service/audio_service.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class YoutubePlayerContainer extends StatefulWidget {
@@ -30,6 +32,12 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
   bool get wantKeepAlive => true;
 
   void listener() {
+    if (_controller.value.playerState == PlayerState.PLAYING) {
+      if (AudioService.playbackState?.basicState ==
+          BasicPlaybackState.playing) {
+        AudioService.pause();
+      }
+    }
     if (_controller.value.playerState == PlayerState.ENDED) {
       myInterstitial
         ..load()
@@ -58,11 +66,16 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
     super.initState();
     fetchYoutubeList();
     _scrollController = new ScrollController();
+    connect();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void connect() async {
+    await AudioService.connect();
   }
 
   @override
@@ -182,9 +195,10 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                             : widget.darkMode ? Colors.grey[600] : Colors.white,
                         child: Row(
                           children: <Widget>[
-                            Image.network(
-                              youtubeList[position]['thumbnail'],
-                            ),
+                            CachedNetworkImage(
+                                imageUrl: youtubeList[position]['thumbnail'],
+                                errorWidget: (context, url, error) =>
+                                    new Icon(Icons.error)),
                             Flexible(
                                 child: Padding(
                               padding: EdgeInsets.all(10),
