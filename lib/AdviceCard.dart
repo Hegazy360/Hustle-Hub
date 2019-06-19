@@ -15,12 +15,15 @@ class AdviceCard extends StatefulWidget {
 }
 
 class _AdviceCardState extends State<AdviceCard>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   bool loading = true;
   bool firstAdvice = true;
   String advice = "";
   AnimationController _controller;
   Animation<double> _frontScale;
+
+  @override
+  bool get wantKeepAlive => true;
 
   fetchAdvice() async {
     var response = await http.get("https://api.adviceslip.com/advice");

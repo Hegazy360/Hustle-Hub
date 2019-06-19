@@ -36,7 +36,7 @@ class _AmbientPlayerState extends State<AmbientPlayer>
     checkPlayingFile();
     WidgetsBinding.instance.addObserver(this);
     connect();
-    connectivityType = Connectivity()
+    connectivityListener = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
       setState(() {
@@ -50,7 +50,7 @@ class _AmbientPlayerState extends State<AmbientPlayer>
     super.dispose();
     disconnect();
     WidgetsBinding.instance.removeObserver(this);
-    connectivityType.cancel();
+    connectivityListener.cancel();
   }
 
   @override

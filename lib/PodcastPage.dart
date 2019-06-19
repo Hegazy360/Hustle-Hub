@@ -12,11 +12,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class PodcastPage extends StatefulWidget {
   final podcast;
+  final color;
+  final darkMode;
 
-  const PodcastPage({
-    Key key,
-    this.podcast,
-  }) : super(key: key);
+  const PodcastPage({Key key, this.podcast, this.color, this.darkMode})
+      : super(key: key);
 
   @override
   _PodcastPageState createState() => _PodcastPageState();
@@ -32,12 +32,12 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    getEpisodes();
 
     super.initState();
     checkPlayingFile();
-    WidgetsBinding.instance.addObserver(this);
     connect();
+    WidgetsBinding.instance.addObserver(this);
+    getEpisodes();
     connectivityType = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
@@ -105,7 +105,8 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
             SliverAppBar(
-              backgroundColor: Colors.white,
+              backgroundColor:
+                  widget.darkMode ? Colors.grey[900] : Colors.white,
               expandedHeight: 300.0,
               floating: false,
               elevation: 3,
@@ -118,31 +119,43 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                     tag: widget.podcast['listennotes_id'],
                     child: Card(
                         elevation: 0,
-                        color: Colors.white,
+                        color:
+                            widget.darkMode ? Colors.grey[900] : Colors.white,
                         child: Column(
                           children: <Widget>[
                             Container(
+                              padding: EdgeInsets.all(10),
                               child: Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                                    MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   Container(
-                                      margin: EdgeInsets.only(
-                                          bottom: 10, right: 10),
                                       width:
                                           MediaQuery.of(context).size.width / 2,
-                                      child: Text(
-                                        widget.podcast['title'],
-                                        style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.bold),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            widget.podcast['title'],
+                                            style: TextStyle(
+                                                color: widget.darkMode
+                                                    ? Colors.white
+                                                    : widget.color,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                              widget.podcast['publisher'] ?? '',
+                                              style: TextStyle(
+                                                  color: widget.darkMode
+                                                      ? Colors.white
+                                                      : Colors.black)),
+                                        ],
                                       )),
                                   Container(
                                     height: 110,
-                                    margin: EdgeInsets.only(
-                                        top: 5, right: 5, bottom: 5, left: 5),
                                     child: CachedNetworkImage(
                                         imageUrl:
                                             widget.podcast['thumbnail_url'],
@@ -153,11 +166,14 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                               ),
                             ),
                             Container(
-                              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                              padding: EdgeInsets.all(10),
                               child: Text(
                                 widget.podcast['description'],
                                 style: TextStyle(
-                                    color: Colors.black, fontSize: 15),
+                                    color: widget.darkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 15),
                                 maxLines: 7,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -190,6 +206,8 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                         var duration = Duration(
                             seconds: episodes[index]['audio_length_sec']);
                         return Card(
+                          color:
+                              widget.darkMode ? Colors.grey[900] : Colors.white,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
@@ -202,10 +220,12 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                           padding: EdgeInsets.fromLTRB(
                                               22, 31, 22, 31),
                                           child: CircularProgressIndicator(
-                                            backgroundColor: Colors.white,
-                                            valueColor: AlwaysStoppedAnimation(
-                                                Colors.black),
-                                          ))
+                                              backgroundColor: Colors.white,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                      widget.darkMode
+                                                          ? Colors.white
+                                                          : Colors.black)))
                                       : IconButton(
                                           onPressed: () => isPlaying && isActive
                                               ? AudioService.pause()
@@ -217,7 +237,9 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                           icon: isPlaying && isActive
                                               ? Icon(Icons.pause)
                                               : Icon(Icons.play_arrow),
-                                          color: Colors.black)
+                                          color: widget.darkMode
+                                              ? Colors.white
+                                              : Colors.black)
 
                                   // IconButton(
                                   //   icon: Icon(
@@ -245,6 +267,9 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                                 ' - ' +
                                                 _printDuration(duration),
                                             style: TextStyle(
+                                                color: widget.darkMode
+                                                    ? Colors.white
+                                                    : Colors.black,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15),
                                           )),
@@ -253,8 +278,11 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                         height: 60,
                                         child: Html(
                                           data: episodes[index]['description'],
-                                          defaultTextStyle:
-                                              TextStyle(fontSize: 16),
+                                          defaultTextStyle: TextStyle(
+                                              fontSize: 16,
+                                              color: widget.darkMode
+                                                  ? Colors.white
+                                                  : Colors.black),
                                         ),
                                       ),
                                       expanded: Container(
@@ -262,8 +290,11 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                           child: Html(
                                             data: episodes[index]
                                                 ['description'],
-                                            defaultTextStyle:
-                                                TextStyle(fontSize: 16),
+                                            defaultTextStyle: TextStyle(
+                                                fontSize: 16,
+                                                color: widget.darkMode
+                                                    ? Colors.white
+                                                    : Colors.black),
                                           )),
                                       tapHeaderToExpand: true,
                                     ),
@@ -466,7 +497,9 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
         androidNotificationChannelName: 'Hustle Hub Player',
         androidNotificationIcon: 'mipmap/ic_launcher',
       ).then((response) {
-        AudioService.playFromMediaId(fileInfoJson);
+        if (response) {
+          AudioService.playFromMediaId(fileInfoJson);
+        }
       });
     } else {
       if (AudioService.playbackState?.basicState == BasicPlaybackState.paused &&

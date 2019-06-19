@@ -9,27 +9,28 @@ class PodcastCard extends StatefulWidget {
   // final fileName;
   final color;
   final darkMode;
-  final pause;
-  final stop;
-  final isPlaying;
+  // final pause;
+  // final stop;
+  // final isPlaying;
   // final position;
   // final duration;
   // final isActive;
-  final loading;
+  // final loading;
 
   const PodcastCard(
       {Key key,
       this.podcast,
-      // this.fileName,
       this.color,
       this.darkMode,
-      this.pause,
-      this.stop,
-      this.isPlaying,
+      // this.fileName,
+      // this.pause,
+      // this.stop,
+      // this.isPlaying,
       // this.position,
       // this.duration,
       // this.isActive,
-      this.loading})
+      // this.loading
+      })
       : super(key: key);
 
   @override
@@ -50,6 +51,8 @@ class _PodcastCardState extends State<PodcastCard> {
               builder: (BuildContext context) {
                 return PodcastPage(
                   podcast: widget.podcast,
+                  color: widget.color,
+                  darkMode: widget.darkMode
                 );
               },
               fullscreenDialog: true));
@@ -57,6 +60,7 @@ class _PodcastCardState extends State<PodcastCard> {
         child: Hero(
             tag: widget.podcast['listennotes_id'],
             child: Card(
+                color: widget.darkMode? Colors.grey[900] : Colors.white,
                 child: Row(
               children: <Widget>[
                 Padding(
@@ -72,7 +76,7 @@ class _PodcastCardState extends State<PodcastCard> {
                               child: Text(
                                 widget.podcast['title'],
                                 style: TextStyle(
-                                    color: widget.color,
+                                    color: widget.darkMode? Colors.white :widget.color,
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold),
                               )),
@@ -80,7 +84,7 @@ class _PodcastCardState extends State<PodcastCard> {
                             child: Text(
                               widget.podcast['description'],
                               style:
-                                  TextStyle(color: Colors.black, fontSize: 15),
+                                  TextStyle(color: widget.darkMode? Colors.white : Colors.black, fontSize: 15),
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),

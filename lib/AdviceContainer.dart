@@ -18,11 +18,7 @@ class AdviceContainer extends StatefulWidget {
   _AdviceContainerState createState() => _AdviceContainerState();
 }
 
-class _AdviceContainerState extends State<AdviceContainer>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _AdviceContainerState extends State<AdviceContainer> {
   @override
   void initState() {
     super.initState();
