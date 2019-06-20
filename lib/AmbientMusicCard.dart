@@ -51,7 +51,7 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
             ? widget.darkMode
                 ? Colors.grey[900].withOpacity(0.4)
                 : widget.color.withOpacity(0.4)
-            : Colors.white30,
+            : widget.darkMode ? Colors.black12 : Colors.white10,
         child: Padding(
             padding: EdgeInsets.only(top: 15, bottom: 15),
             child: Stack(

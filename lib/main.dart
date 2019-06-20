@@ -86,16 +86,16 @@ class _MyAppState extends State<MyApp> {
                   bottom: TabBar(
                     tabs: [
                       Tab(
-                        icon: Icon(Icons.lightbulb_outline),
-                        text: "Advice",
+                        icon: Icon(Icons.mic),
+                        text: "Podcast",
                       ),
                       Tab(
                         icon: Icon(Icons.library_music),
                         text: "Ambient",
                       ),
                       Tab(
-                        icon: Icon(Icons.mic),
-                        text: "Podcast",
+                        icon: Icon(Icons.lightbulb_outline),
+                        text: "Advice",
                       ),
                       Tab(
                         icon: Icon(Icons.play_circle_outline),
@@ -109,11 +109,11 @@ class _MyAppState extends State<MyApp> {
                 ),
                 body: TabBarView(
                   children: [
+                    PodcastPlayer(color: colors[index], darkMode: darkMode),
+                    AmbientPlayer(color: colors[index], darkMode: darkMode),
                     AdviceCard(
                         color: darkMode ? Colors.grey[900] : colors[index],
                         generateColor: generateColor),
-                    AmbientPlayer(color: colors[index], darkMode: darkMode),
-                    PodcastPlayer(color: colors[index], darkMode: darkMode),
                     YoutubePlayerContainer(
                       color: darkMode ? Colors.grey[900] : colors[index],
                       darkMode: this.darkMode,

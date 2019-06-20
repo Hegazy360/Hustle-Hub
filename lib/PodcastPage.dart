@@ -32,7 +32,6 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
 
   @override
   void initState() {
-
     super.initState();
     checkPlayingFile();
     connect();
@@ -184,109 +183,104 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
             ),
           ];
         },
-        body: isLoading
-            ? Center(
-                child: CircularProgressIndicator(),
-              )
-            : StreamBuilder(
-                stream: AudioService.playbackStateStream,
-                builder: (context, snapshot) {
-                  PlaybackState state = snapshot.data;
-                  return ListView.builder(
-                      padding: EdgeInsets.only(bottom: 100),
-                      itemCount: episodes.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        var isPlaying =
-                            state?.basicState == BasicPlaybackState.playing ||
-                                AudioServiceBackground.state.basicState ==
-                                    BasicPlaybackState.playing;
-                        var isActive = playingFileName == episodes[index]['id'];
-                        var loading =
-                            state?.basicState == BasicPlaybackState.buffering;
-                        var duration = Duration(
-                            seconds: episodes[index]['audio_length_sec']);
-                        return Card(
-                          color:
-                              widget.darkMode ? Colors.grey[900] : Colors.white,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.2,
-                                  height: 100,
-                                  child: isActive && loading
-                                      ? Padding(
-                                          padding: EdgeInsets.fromLTRB(
-                                              22, 31, 22, 31),
-                                          child: CircularProgressIndicator(
-                                              backgroundColor: Colors.white,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation(
-                                                      widget.darkMode
-                                                          ? Colors.white
-                                                          : Colors.black)))
-                                      : IconButton(
-                                          onPressed: () => isPlaying && isActive
-                                              ? AudioService.pause()
-                                              : playFromMediaId(
-                                                  episodes[index]['id'],
-                                                  episodes[index]['title'],
-                                                  episodes[index]['audio']),
-                                          iconSize: 50.0,
-                                          icon: isPlaying && isActive
-                                              ? Icon(Icons.pause)
-                                              : Icon(Icons.play_arrow),
-                                          color: widget.darkMode
-                                              ? Colors.white
-                                              : Colors.black)
+        body: Container(
+          color: widget.darkMode ? Colors.grey[800] : Colors.white,
+          child: isLoading
+              ? Center(
+                  child: CircularProgressIndicator(),
+                )
+              : StreamBuilder(
+                  stream: AudioService.playbackStateStream,
+                  builder: (context, snapshot) {
+                    PlaybackState state = snapshot.data;
+                    return ListView.builder(
+                        padding: EdgeInsets.only(bottom: 100),
+                        itemCount: episodes.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          var isPlaying =
+                              state?.basicState == BasicPlaybackState.playing ||
+                                  AudioServiceBackground.state.basicState ==
+                                      BasicPlaybackState.playing;
+                          var isActive =
+                              playingFileName == episodes[index]['id'];
+                          var loading =
+                              state?.basicState == BasicPlaybackState.buffering;
+                          var duration = Duration(
+                              seconds: episodes[index]['audio_length_sec']);
+                          return Card(
+                            elevation: 2,
+                            color: widget.darkMode
+                                ? Colors.grey[900]
+                                : Colors.white,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.2,
+                                    height: 100,
+                                    child: isActive && loading
+                                        ? Padding(
+                                            padding: EdgeInsets.fromLTRB(
+                                                22, 31, 22, 31),
+                                            child: CircularProgressIndicator(
+                                                backgroundColor: Colors.white,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation(
+                                                        widget.darkMode
+                                                            ? Colors.white
+                                                            : Colors.black)))
+                                        : IconButton(
+                                            onPressed: () => isPlaying && isActive
+                                                ? AudioService.pause()
+                                                : playFromMediaId(
+                                                    episodes[index]['id'],
+                                                    episodes[index]['title'],
+                                                    episodes[index]['audio']),
+                                            iconSize: 50.0,
+                                            icon: isPlaying && isActive
+                                                ? Icon(Icons.pause)
+                                                : Icon(Icons.play_arrow),
+                                            color: widget.darkMode
+                                                ? Colors.white
+                                                : Colors.black)
 
-                                  // IconButton(
-                                  //   icon: Icon(
-                                  //     Icons.play_arrow,
-                                  //     size: 60,
-                                  //   ),
-                                  //   onPressed: () {
-                                  //     playFromMediaId(
-                                  //         episodes[index]['id'],
-                                  //         episodes[index]['title'],
-                                  //         episodes[index]['audio']);
-                                  //   },
-                                  // ),
-                                  ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    ExpandablePanel(
-                                      header: Padding(
-                                          padding: EdgeInsets.only(
-                                              top: 10, bottom: 5),
-                                          child: Text(
-                                            episodes[index]['title'] +
-                                                ' - ' +
-                                                _printDuration(duration),
-                                            style: TextStyle(
-                                                color: widget.darkMode
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 15),
-                                          )),
-                                      collapsed: Container(
-                                        padding: EdgeInsets.only(bottom: 10),
-                                        height: 60,
-                                        child: Html(
-                                          data: episodes[index]['description'],
-                                          defaultTextStyle: TextStyle(
-                                              fontSize: 16,
-                                              color: widget.darkMode
-                                                  ? Colors.white
-                                                  : Colors.black),
-                                        ),
-                                      ),
-                                      expanded: Container(
+                                    // IconButton(
+                                    //   icon: Icon(
+                                    //     Icons.play_arrow,
+                                    //     size: 60,
+                                    //   ),
+                                    //   onPressed: () {
+                                    //     playFromMediaId(
+                                    //         episodes[index]['id'],
+                                    //         episodes[index]['title'],
+                                    //         episodes[index]['audio']);
+                                    //   },
+                                    // ),
+                                    ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      ExpandablePanel(
+                                        header: Padding(
+                                            padding: EdgeInsets.only(
+                                                top: 10, bottom: 5),
+                                            child: Text(
+                                              episodes[index]['title'] +
+                                                  ' - ' +
+                                                  _printDuration(duration),
+                                              style: TextStyle(
+                                                  color: widget.darkMode
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15),
+                                            )),
+                                        collapsed: Container(
                                           padding: EdgeInsets.only(bottom: 10),
+                                          height: 60,
                                           child: Html(
                                             data: episodes[index]
                                                 ['description'],
@@ -295,17 +289,31 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
                                                 color: widget.darkMode
                                                     ? Colors.white
                                                     : Colors.black),
-                                          )),
-                                      tapHeaderToExpand: true,
-                                    ),
-                                  ],
+                                          ),
+                                        ),
+                                        expanded: Container(
+                                            padding:
+                                                EdgeInsets.only(bottom: 10),
+                                            child: Html(
+                                              data: episodes[index]
+                                                  ['description'],
+                                              defaultTextStyle: TextStyle(
+                                                  fontSize: 16,
+                                                  color: widget.darkMode
+                                                      ? Colors.white
+                                                      : Colors.black),
+                                            )),
+                                        tapHeaderToExpand: true,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      });
-                }),
+                              ],
+                            ),
+                          );
+                        });
+                  }),
+        ),
       ),
     );
 
