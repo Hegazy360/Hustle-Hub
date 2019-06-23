@@ -1,4 +1,4 @@
-package com.mohega.daily_ad1;
+package com.mohega.hustle_hub;
 
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.app.FlutterApplication;

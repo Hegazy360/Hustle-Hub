@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mohega.daily_ad1">
+    package="com.mohega.hustle_hub">
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -49,6 +49,6 @@
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <meta-data 
             android:name="com.google.android.gms.ads.APPLICATION_ID" 
-            android:value="ca-app-pub-8400135927246890~2282634635"/>
+            android:value="ca-app-pub-3596613421523831~6442139403"/>
     </application>
 </manifest>

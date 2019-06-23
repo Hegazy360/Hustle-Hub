@@ -96,76 +96,6 @@ class _YoutubePlayerContainerState extends State<YoutubePlayerContainer>
                 ),
               )
             : CircularProgressIndicator(),
-        Container(
-          color: widget.darkMode ? Colors.grey[900] : Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              RaisedButton.icon(
-                color: widget.darkMode ? Colors.grey[700] : Colors.white,
-                disabledColor: widget.darkMode ? Colors.grey[800] : Colors.grey,
-                textColor: widget.darkMode ? Colors.white : Colors.black,
-                disabledTextColor:
-                    widget.darkMode ? Colors.grey[700] : Colors.black,
-                icon: Container(
-                  child: Icon(Icons.navigate_before),
-                ),
-                label: Text('Previous Video'),
-                splashColor: widget.color,
-                onPressed: firstVideo
-                    ? null
-                    : () {
-                        myInterstitial
-                          ..load()
-                          ..show(
-                            anchorType: AnchorType.bottom,
-                            anchorOffset: 0.0,
-                          );
-                        setState(() {
-                          var newIndex = index - 1;
-                          if (!autoPlay) autoPlay = true;
-                          if (lastVideo) lastVideo = false;
-                          if (newIndex == 0) firstVideo = true;
-                          index = newIndex;
-                        });
-                      },
-              ),
-              RaisedButton.icon(
-                color: widget.darkMode ? Colors.grey[700] : Colors.white,
-                disabledColor: widget.darkMode ? Colors.grey[800] : Colors.grey,
-                textColor: widget.darkMode ? Colors.white : Colors.black,
-                disabledTextColor:
-                    widget.darkMode ? Colors.grey[700] : Colors.black,
-                icon: Container(
-                  child: Icon(Icons.navigate_next),
-                ),
-                label: Text('Next Video'),
-                splashColor: widget.color,
-                onPressed: lastVideo
-                    ? null
-                    : () {
-                        _scrollController.animateTo(index.toDouble() * 101,
-                            duration: new Duration(seconds: 1),
-                            curve: Curves.ease);
-                        myInterstitial
-                          ..load()
-                          ..show(
-                            anchorType: AnchorType.bottom,
-                            anchorOffset: 0.0,
-                          );
-                        setState(() {
-                          var newIndex = index + 1;
-                          if (!autoPlay) autoPlay = true;
-                          if (firstVideo) firstVideo = false;
-                          if (newIndex == youtubeList.length - 1)
-                            lastVideo = true;
-                          index++;
-                        });
-                      },
-              )
-            ],
-          ),
-        ),
         Expanded(
           child: Container(
               color: widget.darkMode ? Colors.grey[900] : Colors.white,
@@ -273,6 +203,6 @@ MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
 );
 
 InterstitialAd myInterstitial = InterstitialAd(
-  adUnitId: "ca-app-pub-8400135927246890/7657308297",
+  adUnitId: "ca-app-pub-3596613421523831/8880600480",
   targetingInfo: targetingInfo,
 );

@@ -78,7 +78,7 @@ class _AmbientMusicCardState extends State<AmbientMusicCard> {
                                     backgroundColor: Colors.white,
                                     valueColor: AlwaysStoppedAnimation(
                                         widget.darkMode
-                                            ? Colors.orange
+                                            ? Colors.grey[600]
                                             : widget.color),
                                   ))
                               : IconButton(

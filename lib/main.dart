@@ -9,7 +9,6 @@ import 'package:daily_ad1/PodcastPlayer.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:daily_ad1/YoutubePlayerContainer.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:audio_service/audio_service.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,11 +21,10 @@ class _MyAppState extends State<MyApp> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   List colors = [
+    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
     Colors.cyan,
     Colors.redAccent,
-    Colors.teal, //TEAL IS FUCKING DOPE! Main color dope
     Colors.green,
-    Colors.lightGreen,
     Colors.lightBlue,
     Colors.pink,
   ];
@@ -38,7 +36,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     FirebaseAdMob.instance
-        .initialize(appId: 'ca-app-pub-8400135927246890')
+        .initialize(appId: 'ca-app-pub-3596613421523831')
         .then((response) {
       myBanner
         ..load()
@@ -165,7 +163,7 @@ MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
 );
 
 BannerAd myBanner = BannerAd(
-  adUnitId: 'ca-app-pub-8400135927246890/4389923227',
+  adUnitId: 'ca-app-pub-3596613421523831/7838981551',
   size: AdSize.smartBanner,
   targetingInfo: targetingInfo,
 );

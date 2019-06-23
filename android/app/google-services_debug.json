@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:617578673821:android:7c8aeb86e9f633de",
         "android_client_info": {
-          "package_name": "com.mohega.daily_ad1"
+          "package_name": "com.mohega.hustle_hub"
         }
       },
       "oauth_client": [
@@ -34,7 +34,7 @@
           ]
         }
       },
-      "admob_app_id": "ca-app-pub-8400135927246890~2282634635"
+      "admob_app_id": "ca-app-pub-3596613421523831~6442139403"
     }
   ],
   "configuration_version": "1"

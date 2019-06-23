@@ -97,9 +97,8 @@ void backgroundTask() {
       final client = http.Client();
       final request = http.Request('GET', Uri.parse(url))
         ..followRedirects = false;
-      print(request.headers);
       final response = await client.send(request);
-
+      print(response.statusCode);
       if (response.statusCode == HttpStatus.movedTemporarily) {
         isRedirect = response.isRedirect;
         url = response.headers['location'];

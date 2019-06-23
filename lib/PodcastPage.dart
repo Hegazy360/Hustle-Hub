@@ -5,6 +5,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:daily_ad1/BackgroundAudioService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +45,11 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
         connectivityType = result;
       });
     });
+    myBanner
+      ..load()
+      ..show(
+        anchorType: AnchorType.bottom,
+      );
   }
 
   @override
@@ -523,3 +529,13 @@ class _PodcastPageState extends State<PodcastPage> with WidgetsBindingObserver {
     });
   }
 }
+
+MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
+  testDevices: <String>["E69FA5F1C4163C34800437316A07E39B"],
+);
+
+BannerAd myBanner = BannerAd(
+  adUnitId: 'ca-app-pub-3596613421523831/8139553828',
+  size: AdSize.smartBanner,
+  targetingInfo: targetingInfo,
+);
