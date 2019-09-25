@@ -1,16 +1,16 @@
 # Hustle Hub
 
-A new Flutter project.
+## Music Player, Podcast Player and Youtube Player
 
-## Getting Started
+### Can be seen at https://play.google.com/store/apps/details?id=com.mohega.hustle_hub
 
-This project is a starting point for a Flutter application.
+#### Goal : Testing flutter media and audio management + state handling
 
-A few resources to get you started if this is your first Flutter project:
+![alt text](https://lh3.googleusercontent.com/t7HePLMoj5PRH8YdDcP1rSspzfeOjmW-cWRqL_O1iS8dr6dasj0XhdOb7Tk9liSmYdZT=w1920-h924-rw)
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+![alt text](https://lh3.googleusercontent.com/k6i9kNsxTt8wYPuL9bilGjlpbhCGNIvuweGhHCRm2Zfao3vYPEv1EGBdhg4T7oq6-2Kj=w1920-h924-rw)
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+![alt text](https://lh3.googleusercontent.com/jYjHUqq3mnhpsr0Dq5WOeDRF-OFQSooIBfsHza0jSkweIdluZfNRig8CIQpXIf53DOw=w1920-h924-rw)
+
+![alt text](https://lh3.googleusercontent.com/yoGYG8P2oTaT3Eo394kUKtBfRexdLvnu5M09SrQV_IgCyXa9ybcmAYoBlJ-UVVs4BsJo=w1920-h924-rw)
+
